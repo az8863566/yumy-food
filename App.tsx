@@ -1,20 +1,20 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { AppProvider } from '@/store';
+import { MainNavigator } from '@/navigation/MainNavigator';
+import { ErrorBoundary } from '@/components';
 
+/**
+ * 应用入口组件
+ * 职责：全局配置、初始化、Provider 嵌套、路由挂载
+ */
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <ErrorBoundary>
+      <AppProvider>
+        <MainNavigator />
+        <StatusBar style="light" />
+      </AppProvider>
+    </ErrorBoundary>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
