@@ -31,7 +31,7 @@ export function CategoryScreen() {
     );
 
     return (
-      <View style={styles.container}>
+      <View style={styles.detailContainer}>
         <View style={styles.subCategoryHeader}>
           <TouchableOpacity style={styles.backBtn} onPress={() => setActiveMinorCategoryId(null)}>
             <Ionicons name="chevron-back" size={SIZES.iconLarge} color={COLORS.textPrimary} />
@@ -142,6 +142,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
     flexDirection: 'row',
+  },
+  detailContainer: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    flexDirection: 'column',
   },
   // 左侧父分类导航栏
   leftSidebar: {

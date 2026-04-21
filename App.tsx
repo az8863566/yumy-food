@@ -1,5 +1,6 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AppProvider } from '@/store';
 import { MainNavigator } from '@/navigation/MainNavigator';
 import { ErrorBoundary } from '@/components';
@@ -10,11 +11,13 @@ import { ErrorBoundary } from '@/components';
  */
 export default function App() {
   return (
-    <ErrorBoundary>
-      <AppProvider>
-        <MainNavigator />
-        <StatusBar style="light" />
-      </AppProvider>
-    </ErrorBoundary>
+    <SafeAreaProvider>
+      <ErrorBoundary>
+        <AppProvider>
+          <MainNavigator />
+          <StatusBar style="light" />
+        </AppProvider>
+      </ErrorBoundary>
+    </SafeAreaProvider>
   );
 }

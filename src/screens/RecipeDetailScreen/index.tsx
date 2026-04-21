@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, Image, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigationContext } from '@/store/NavigationContext';
 import { useAuth, useRecipeActions } from '@/hooks';
@@ -16,6 +17,7 @@ export function RecipeDetailScreen() {
     getCommentCount,
   } = useRecipeActions();
   const { checkAuth } = useAuth();
+  const { top: safeTop } = useSafeAreaInsets();
 
   const recipe = getRecipeById(activeRecipeId);
 
@@ -34,11 +36,11 @@ export function RecipeDetailScreen() {
       <ScrollView style={styles.container}>
         <Image source={{ uri: recipe.image }} style={styles.detailImage} />
 
-        <TouchableOpacity style={styles.backBtn} onPress={() => setActiveRecipeId(null)}>
+        <TouchableOpacity style={[styles.backBtn, { top: safeTop + SPACING.lg }]} onPress={() => setActiveRecipeId(null)}>
           <Ionicons name="chevron-back" size={SIZES.iconLarge} color="#ffffff" />
         </TouchableOpacity>
 
-        <View style={styles.headerActions}>
+        <View style={[styles.headerActions, { top: safeTop + SPACING.lg }]}>
           <TouchableOpacity
             style={styles.headerActionBtn}
             onPress={() => handleActionClick(() => handleToggleLike(recipe.id))}
@@ -134,7 +136,6 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     position: 'absolute',
-    top: SPACING.xxl,
     left: SPACING.lg,
     width: 36,
     height: 36,
@@ -147,7 +148,6 @@ const styles = StyleSheet.create({
   },
   headerActions: {
     position: 'absolute',
-    top: SPACING.xxl,
     right: SPACING.lg,
     flexDirection: 'row',
     gap: SPACING.xs,

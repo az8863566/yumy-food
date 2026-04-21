@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, Modal, TextInput } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigationContext } from '@/store/NavigationContext';
 import { useAuthContext } from '@/store/AuthContext';
@@ -51,7 +52,7 @@ function AuthModal() {
 
   return (
     <Modal visible={showAuthModal} animationType="slide" transparent={false}>
-      <View style={authStyles.container}>
+      <SafeAreaView style={authStyles.container} edges={['top']}>
         <TouchableOpacity style={authStyles.closeBtn} onPress={() => setShowAuthModal(false)}>
           <Ionicons name="chevron-back" size={SIZES.iconLarge} color={COLORS.textPrimary} />
         </TouchableOpacity>
@@ -89,7 +90,7 @@ function AuthModal() {
             <Text style={authStyles.submitBtnText}>登录</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     </Modal>
   );
 }
@@ -102,7 +103,7 @@ const authStyles = StyleSheet.create({
   },
   closeBtn: {
     position: 'absolute',
-    top: SPACING.xxxl + SPACING.lg,
+    top: SPACING.lg,
     left: SPACING.lg,
     width: 40,
     height: 40,
@@ -208,7 +209,9 @@ export function MainNavigator() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>{renderTabContent()}</View>
+      <SafeAreaView style={styles.content} edges={['top']}>
+        {renderTabContent()}
+      </SafeAreaView>
 
       <View style={styles.tabBar}>{TAB_CONFIGS.map(renderTabButton)}</View>
 
