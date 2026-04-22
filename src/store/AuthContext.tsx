@@ -8,7 +8,7 @@ import React, {
   ReactNode,
   useEffect,
 } from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { storageService } from '@/services/storage.service';
 import type { User } from '@/@types';
 import { login as loginApi, register as registerApi, getCurrentUser } from '@/api/endpoints';
 import type { TocAuthRegisterDTO } from '@/api/types';
@@ -21,6 +21,7 @@ interface AuthContextType {
   loginAsync: (username: string, password: string) => Promise<void>;
   registerAsync: (data: TocAuthRegisterDTO) => Promise<void>;
   logout: () => Promise<void>;
+  updateCurrentUser: (user: Partial<User>) => void;
   setShowAuthModal: (show: boolean) => void;
   showAuthModal: boolean;
   /** 登录后待执行的回调（如跳转到菜谱详情） */
@@ -41,18 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const token = await SecureStore.getItemAsync('auth_token');
+        const token = await storageService.getItemAsync('auth_token');
         if (token) {
           const response = await getCurrentUser();
           if (response.code === 0 && response.data) {
             setCurrentUser(adaptUser(response.data));
           } else {
-            await SecureStore.deleteItemAsync('auth_token');
+            await storageService.deleteItemAsync('auth_token');
           }
         }
       } catch (error) {
         console.error('Init auth failed:', error);
-        await SecureStore.deleteItemAsync('auth_token');
+        await storageService.deleteItemAsync('auth_token');
       }
     };
     initAuth();
@@ -71,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await loginApi({ username, password });
       if (response.code === 0 && response.data) {
-        await SecureStore.setItemAsync('auth_token', response.data.token);
+        await storageService.setItemAsync('auth_token', response.data.token);
         setCurrentUser(adaptUser(response.data.user));
       } else {
         throw new Error(response.msg || response.message || '登录失败');
@@ -107,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await registerApi(data);
       if (response.code === 0 && response.data) {
-        await SecureStore.setItemAsync('auth_token', response.data.token);
+        await storageService.setItemAsync('auth_token', response.data.token);
         setCurrentUser(adaptUser(response.data.user));
       } else {
         throw new Error(response.msg || response.message || '注册失败');
@@ -139,9 +140,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await SecureStore.deleteItemAsync('auth_token');
+    await storageService.deleteItemAsync('auth_token');
     setCurrentUser(null);
     pendingActionRef.current = null;
+  }, []);
+
+  const updateCurrentUser = useCallback((user: Partial<User>) => {
+    setCurrentUser((prev) => (prev ? { ...prev, ...user } : null));
   }, []);
 
   const contextValue = useMemo(
@@ -152,12 +157,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginAsync,
       registerAsync,
       logout,
+      updateCurrentUser,
       setShowAuthModal,
       showAuthModal,
       pendingAction: pendingActionRef.current,
       setPendingAction,
     }),
-    [currentUser, isAuthLoading, showAuthModal, login, loginAsync, registerAsync, logout, setPendingAction],
+    [
+      currentUser,
+      isAuthLoading,
+      showAuthModal,
+      login,
+      loginAsync,
+      registerAsync,
+      logout,
+      updateCurrentUser,
+      setPendingAction,
+    ],
   );
 
   return <AuthContext value={contextValue}>{children}</AuthContext>;

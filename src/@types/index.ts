@@ -8,6 +8,8 @@ export interface User {
   id: string;
   username: string;
   password?: string;
+  nickname?: string;
+  signature?: string;
   avatar: string;
 }
 

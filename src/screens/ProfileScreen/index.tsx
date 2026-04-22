@@ -27,7 +27,7 @@ export function ProfileScreen() {
   const { recipes } = useRecipeContext();
   const { myFavorites, loading: favoritesLoading } = useUserInteraction();
   const { comments: myComments, loading: commentsLoading } = useMyComments();
-  const { setActiveRecipeId } = useNavigationContext();
+  const { setActiveRecipeId, setShowEditProfile } = useNavigationContext();
   const [activeTab, setActiveTab] = useState<ProfileTab>('favorites');
 
   const loading = favoritesLoading || commentsLoading;
@@ -59,17 +59,30 @@ export function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* 右上角退出登录按钮 */}
-      <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
-        <Text style={styles.logoutBtnText}>退出登录</Text>
-      </TouchableOpacity>
+      {/* 右上角操作按钮 */}
+      <View style={styles.headerActions}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => setShowEditProfile(true)}>
+          <Ionicons
+            name="pencil"
+            size={14}
+            color={COLORS.textSecondary}
+            style={styles.actionIcon}
+          />
+          <Text style={styles.actionBtnText}>编辑资料</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionBtn} onPress={logout}>
+          <Text style={styles.actionBtnText}>退出登录</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* 个人信息头部 */}
       <View style={styles.profileHeader}>
         <Image source={{ uri: currentUser.avatar }} style={styles.avatar} />
         <View style={styles.profileInfo}>
-          <Text style={styles.username}>{currentUser.username}</Text>
-          <Text style={styles.profileSubtitle}>发现属于你的味蕾惊喜</Text>
+          <Text style={styles.username}>{currentUser.nickname || currentUser.username}</Text>
+          <Text style={styles.profileSubtitle}>
+            {currentUser.signature || '发现属于你的味蕾惊喜'}
+          </Text>
         </View>
       </View>
 
@@ -220,19 +233,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 2,
   },
-  // 退出登录按钮
-  logoutBtn: {
+  // 顶部操作按钮
+  headerActions: {
     position: 'absolute',
     top: SPACING.xl,
     right: SPACING.lg,
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    zIndex: 10,
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.xs,
     borderRadius: SIZES.borderRadiusXLarge,
     borderWidth: 1,
     borderColor: COLORS.border,
-    zIndex: 10,
   },
-  logoutBtnText: {
+  actionIcon: {
+    marginRight: 4,
+  },
+  actionBtnText: {
     color: COLORS.textSecondary,
     fontSize: FONT_SIZES.sm,
   },

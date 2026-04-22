@@ -4,7 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigationContext } from '@/store/NavigationContext';
 import { useAuthContext } from '@/store/AuthContext';
-import { HomeScreen, CategoryScreen, ProfileScreen, RecipeDetailScreen } from '@/screens';
+import {
+  HomeScreen,
+  CategoryScreen,
+  ProfileScreen,
+  RecipeDetailScreen,
+  EditProfileScreen,
+} from '@/screens';
 import { COLORS, SPACING, SIZES, FONT_SIZES } from '@/constants';
 import type { TabType } from '@/@types';
 
@@ -26,8 +32,14 @@ const TAB_CONFIGS: TabConfig[] = [
  * 全屏模态窗，包含用户名/密码登录表单
  */
 function AuthModal() {
-  const { showAuthModal, loginAsync, setShowAuthModal, pendingAction, setPendingAction, isAuthLoading } =
-    useAuthContext();
+  const {
+    showAuthModal,
+    loginAsync,
+    setShowAuthModal,
+    pendingAction,
+    setPendingAction,
+    isAuthLoading,
+  } = useAuthContext();
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [error, setError] = React.useState('');
@@ -108,9 +120,7 @@ function AuthModal() {
             onPress={handleSubmit}
             disabled={isAuthLoading}
           >
-            <Text style={authStyles.submitBtnText}>
-              {isAuthLoading ? '登录中...' : '登录'}
-            </Text>
+            <Text style={authStyles.submitBtnText}>{isAuthLoading ? '登录中...' : '登录'}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -216,7 +226,7 @@ const authStyles = StyleSheet.create({
  * 负责 Tab 导航和页面切换逻辑
  */
 export function MainNavigator() {
-  const { currentTab, setCurrentTab, activeRecipeId } = useNavigationContext();
+  const { currentTab, setCurrentTab, activeRecipeId, showEditProfile } = useNavigationContext();
 
   const renderTabContent = () => {
     switch (currentTab) {
@@ -259,6 +269,8 @@ export function MainNavigator() {
       <View style={styles.tabBar}>{TAB_CONFIGS.map(renderTabButton)}</View>
 
       {activeRecipeId && <RecipeDetailScreen />}
+
+      {showEditProfile && <EditProfileScreen />}
 
       <AuthModal />
     </View>

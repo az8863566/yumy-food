@@ -6,10 +6,12 @@ interface NavigationContextType {
   activeRecipeId: string | null;
   activeMinorCategoryId: string | null;
   searchQuery: string;
+  showEditProfile: boolean;
   setCurrentTab: (tab: TabType) => void;
   setActiveRecipeId: (id: string | null) => void;
   setActiveMinorCategoryId: (id: string | null) => void;
   setSearchQuery: (query: string) => void;
+  setShowEditProfile: (show: boolean) => void;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
@@ -19,6 +21,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const [activeRecipeId, setActiveRecipeId] = useState<string | null>(null);
   const [activeMinorCategoryId, setActiveMinorCategoryId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   const contextValue = useMemo(
     () => ({
@@ -26,12 +29,14 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
       activeRecipeId,
       activeMinorCategoryId,
       searchQuery,
+      showEditProfile,
       setCurrentTab,
       setActiveRecipeId,
       setActiveMinorCategoryId,
       setSearchQuery,
+      setShowEditProfile,
     }),
-    [currentTab, activeRecipeId, activeMinorCategoryId, searchQuery],
+    [currentTab, activeRecipeId, activeMinorCategoryId, searchQuery, showEditProfile],
   );
 
   return <NavigationContext value={contextValue}>{children}</NavigationContext>;
