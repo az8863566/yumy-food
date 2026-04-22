@@ -32,6 +32,8 @@ export interface Comment {
   text: string;
   images: string[];
   date: string;
+  username?: string;
+  avatar?: string;
 }
 
 /** 菜谱类型 */

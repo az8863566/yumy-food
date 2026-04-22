@@ -7,11 +7,13 @@ import {
   Image,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthContext } from '@/store/AuthContext';
 import { useRecipeContext } from '@/store/RecipeContext';
 import { useNavigationContext } from '@/store/NavigationContext';
+import { useUserInteraction, useMyComments } from '@/hooks';
 import { RecipeCard } from '@components/RecipeCard';
 import { COLORS, SPACING, SIZES, FONT_SIZES, LINE_HEIGHTS } from '@/constants';
 
@@ -22,9 +24,13 @@ const TAB_INDICATOR_WIDTH = 80;
 
 export function ProfileScreen() {
   const { currentUser, logout, setShowAuthModal } = useAuthContext();
-  const { recipes, favorites, comments } = useRecipeContext();
+  const { recipes } = useRecipeContext();
+  const { myFavorites, loading: favoritesLoading } = useUserInteraction();
+  const { comments: myComments, loading: commentsLoading } = useMyComments();
   const { setActiveRecipeId } = useNavigationContext();
   const [activeTab, setActiveTab] = useState<ProfileTab>('favorites');
+
+  const loading = favoritesLoading || commentsLoading;
 
   if (!currentUser) {
     return (
@@ -43,8 +49,8 @@ export function ProfileScreen() {
     );
   }
 
-  const savedRecipes = recipes.filter((r) => favorites.includes(r.id));
-  const userComments = comments;
+  const savedRecipes = myFavorites;
+  const userComments = myComments;
 
   const tabIndicatorLeft =
     activeTab === 'favorites'

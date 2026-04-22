@@ -32,8 +32,8 @@ export function useAppStore() {
     showAuthModal: auth.showAuthModal,
     setShowAuthModal: auth.setShowAuthModal,
     login: auth.login,
-    logout: () => {
-      auth.logout();
+    logout: async () => {
+      await auth.logout();
       // 登出时清空点赞和收藏
       recipe.clearUserActions();
     },

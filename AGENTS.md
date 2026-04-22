@@ -242,4 +242,5 @@ app/
 - 必须使用 `EXPO_PUBLIC_` 前缀定义环境变量
 - 必须将所有常量汇总到 `src/constants/` 目录，按类型拆分文件
 - 必须使用 Tamagui 组件库构建 UI，保证跨平台一致性
+- 优先使用 Tamagui 提供的组件，仅在无法满足需求时才自定义组件
 - 必须使用 react-native-vector-icons 作为图标库

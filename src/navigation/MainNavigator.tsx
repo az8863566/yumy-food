@@ -26,27 +26,32 @@ const TAB_CONFIGS: TabConfig[] = [
  * 全屏模态窗，包含用户名/密码登录表单
  */
 function AuthModal() {
-  const { showAuthModal, login, setShowAuthModal, pendingAction, setPendingAction } =
+  const { showAuthModal, loginAsync, setShowAuthModal, pendingAction, setPendingAction, isAuthLoading } =
     useAuthContext();
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
 
-  const handleSubmit = () => {
-    if (!username || !password) return;
-    login({
-      id: Math.random().toString(),
-      username,
-      avatar: 'https://picsum.photos/seed/' + username + '/200',
-    });
-    setShowAuthModal(false);
-    setUsername('');
-    setPassword('');
-    // 登录成功后执行待处理的动作（如跳转到菜谱详情）
-    if (pendingAction) {
-      // 使用 setTimeout 确保状态更新已完成
-      const action = pendingAction;
-      setPendingAction(null);
-      setTimeout(action, 0);
+  const handleSubmit = async () => {
+    if (!username || !password) {
+      setError('请输入用户名和密码');
+      return;
+    }
+    setError('');
+    try {
+      await loginAsync(username, password);
+      setShowAuthModal(false);
+      setUsername('');
+      setPassword('');
+      // 登录成功后执行待处理的动作（如跳转到菜谱详情）
+      if (pendingAction) {
+        const action = pendingAction;
+        setPendingAction(null);
+        setTimeout(action, 0);
+      }
+    } catch (e: any) {
+      console.error('[AuthModal] Login error:', e?.message, e);
+      setError(e.message || '登录失败，请重试');
     }
   };
 
@@ -66,9 +71,12 @@ function AuthModal() {
           <View style={authStyles.inputGroup}>
             <Text style={authStyles.label}>用户名</Text>
             <TextInput
-              style={authStyles.input}
+              style={[authStyles.input, error ? authStyles.inputError : null]}
               value={username}
-              onChangeText={setUsername}
+              onChangeText={(text) => {
+                setUsername(text);
+                if (error) setError('');
+              }}
               placeholder="请输入用户名"
               placeholderTextColor={COLORS.textSecondary}
             />
@@ -77,17 +85,32 @@ function AuthModal() {
           <View style={authStyles.inputGroup}>
             <Text style={authStyles.label}>密码</Text>
             <TextInput
-              style={authStyles.input}
+              style={[authStyles.input, error ? authStyles.inputError : null]}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => {
+                setPassword(text);
+                if (error) setError('');
+              }}
               placeholder="请输入密码"
               placeholderTextColor={COLORS.textSecondary}
               secureTextEntry
             />
           </View>
 
-          <TouchableOpacity style={authStyles.submitBtn} onPress={handleSubmit}>
-            <Text style={authStyles.submitBtnText}>登录</Text>
+          {error ? (
+            <View style={authStyles.errorContainer}>
+              <Text style={authStyles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+
+          <TouchableOpacity
+            style={[authStyles.submitBtn, isAuthLoading && authStyles.submitBtnDisabled]}
+            onPress={handleSubmit}
+            disabled={isAuthLoading}
+          >
+            <Text style={authStyles.submitBtnText}>
+              {isAuthLoading ? '登录中...' : '登录'}
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -165,6 +188,26 @@ const authStyles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     fontWeight: 'bold',
     letterSpacing: 3,
+  },
+  submitBtnDisabled: {
+    opacity: 0.6,
+  },
+  inputError: {
+    borderColor: COLORS.error,
+    borderWidth: 1,
+  },
+  errorContainer: {
+    backgroundColor: COLORS.errorBg,
+    borderRadius: SIZES.borderRadius,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
+    marginBottom: SPACING.lg,
+    alignItems: 'center',
+  },
+  errorText: {
+    color: COLORS.error,
+    fontSize: FONT_SIZES.sm,
+    textAlign: 'center',
   },
 });
 

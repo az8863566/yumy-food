@@ -1,46 +1,131 @@
-import { useMemo } from 'react';
-import { useRecipeContext } from '@/store/RecipeContext';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigationContext } from '@/store/NavigationContext';
+import { searchRecipes, getTopRanked, getRecommended } from '@/api/endpoints';
+import { adaptRecipes } from '@/api/adapter';
+import type { Recipe } from '@/@types';
 
 /**
  * 菜谱搜索和过滤相关 Hook
  * 封装食谱搜索、排行榜、推荐等逻辑
+ * 所有数据均来自后端 API
  */
 export function useSearchRecipes() {
-  const { recipes } = useRecipeContext();
   const { searchQuery } = useNavigationContext();
 
-  /**
-   * 根据搜索关键词过滤菜谱
-   */
-  const filteredRecipes = useMemo(() => {
-    if (!searchQuery.trim()) return recipes;
+  const [topRanked, setTopRanked] = useState<Recipe[]>([]);
+  const [recommended, setRecommended] = useState<Recipe[]>([]);
+  const [searchResults, setSearchResults] = useState<Recipe[]>([]);
+  const [loadingTop, setLoadingTop] = useState(false);
+  const [loadingRecommended, setLoadingRecommended] = useState(false);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-    const query = searchQuery.toLowerCase();
-    return recipes.filter(
-      (r) => r.title.toLowerCase().includes(query) || r.description.toLowerCase().includes(query),
-    );
-  }, [recipes, searchQuery]);
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
-   * 获取人气排行榜（点赞数前3名）
+   * 获取人气排行榜
    */
-  const topRanked = useMemo(() => {
-    return [...recipes].sort((a, b) => b.likes - a.likes).slice(0, 3);
-  }, [recipes]);
+  const fetchTopRanked = useCallback(async () => {
+    try {
+      setLoadingTop(true);
+      const response = await getTopRanked(3);
+      if (response.code === 0 && response.data) {
+        setTopRanked(adaptRecipes(response.data));
+      }
+    } catch (err) {
+      console.error('Failed to fetch top ranked:', err);
+    } finally {
+      setLoadingTop(false);
+    }
+  }, []);
 
   /**
-   * 获取推荐菜谱（排除排行榜的菜谱）
+   * 获取推荐菜谱
    */
-  const recommended = useMemo(() => {
-    const topIds = new Set(topRanked.map((r) => r.id));
-    return recipes.filter((r) => !topIds.has(r.id));
-  }, [recipes, topRanked]);
+  const fetchRecommended = useCallback(async () => {
+    try {
+      setLoadingRecommended(true);
+      const response = await getRecommended(1, 10);
+      if (response.code === 0 && response.data) {
+        setRecommended(adaptRecipes(response.data.records || []));
+      }
+    } catch (err) {
+      console.error('Failed to fetch recommended:', err);
+    } finally {
+      setLoadingRecommended(false);
+    }
+  }, []);
+
+  /**
+   * 搜索菜谱（带防抖）
+   */
+  const performSearch = useCallback(async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setLoadingSearch(false);
+      return;
+    }
+    try {
+      setLoadingSearch(true);
+      setError(null);
+      const response = await searchRecipes(query.trim(), 1, 20);
+      if (response.code === 0 && response.data) {
+        setSearchResults(adaptRecipes(response.data.records || []));
+      } else {
+        throw new Error(response.msg || response.message || '搜索失败');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('搜索失败'));
+      console.error('Failed to search recipes:', err);
+    } finally {
+      setLoadingSearch(false);
+    }
+  }, []);
+
+  /**
+   * 加载人气排行和推荐
+   */
+  useEffect(() => {
+    fetchTopRanked();
+    fetchRecommended();
+  }, [fetchTopRanked, fetchRecommended]);
+
+  /**
+   * 搜索防抖
+   */
+  useEffect(() => {
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+    searchTimerRef.current = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 500);
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, [searchQuery, performSearch]);
+
+  const isSearching = searchQuery.trim().length > 0;
+  const loading = loadingTop || loadingRecommended || (isSearching && loadingSearch);
+
+  /**
+   * 最终展示列表：有搜索词时展示搜索结果，否则展示推荐
+   */
+  const displayRecipes = useMemo(() => {
+    return isSearching ? searchResults : recommended;
+  }, [isSearching, searchResults, recommended]);
 
   return {
-    filteredRecipes,
     topRanked,
     recommended,
+    searchResults,
+    displayRecipes,
+    isSearching,
+    loading,
+    loadingSearch,
+    error,
     searchQuery,
   };
 }

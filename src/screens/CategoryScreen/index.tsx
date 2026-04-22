@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,27 +7,58 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigationContext } from '@/store/NavigationContext';
-import { useRecipeContext } from '@/store/RecipeContext';
-import { parentCategories, subCategories } from '@/data';
+import { useCategories, useCategoryRecipes } from '@/hooks';
 import { RecipeCard } from '@components/RecipeCard';
 import { COLORS, SPACING, SIZES, FONT_SIZES } from '@/constants';
 
 export function CategoryScreen() {
   const { activeMinorCategoryId, setActiveMinorCategoryId } = useNavigationContext();
-  const { recipes } = useRecipeContext();
-  const [selectedParent, setSelectedParent] = useState(parentCategories[0].id);
+  const { parentCategories, subCategories, loading: categoriesLoading, error: categoriesError } = useCategories();
+  const {
+    recipes: categoryRecipes,
+    loading: categoryRecipesLoading,
+    error: categoryRecipesError,
+  } = useCategoryRecipes(activeMinorCategoryId);
+  const [selectedParent, setSelectedParent] = useState<string>('');
   const [localSearch, setLocalSearch] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  // 当 parentCategories 加载完成后，自动选中第一个父分类
+  useEffect(() => {
+    if (parentCategories.length > 0 && !selectedParent) {
+      setSelectedParent(parentCategories[0].id);
+    }
+  }, [parentCategories, selectedParent]);
+
+  const loading = categoriesLoading;
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (categoriesError) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <Ionicons name="warning-outline" size={SIZES.iconLarge} color={COLORS.textSecondary} />
+        <Text style={styles.emptyText}>分类加载失败</Text>
+        <Text style={styles.errorText}>{categoriesError.message}</Text>
+      </View>
+    );
+  }
 
   // 子分类详情视图
   if (activeMinorCategoryId) {
     const cat = subCategories.find((c) => c.id === activeMinorCategoryId);
-    const displayRecipes = recipes.filter(
-      (r) =>
-        r.categoryId === activeMinorCategoryId &&
-        (r.title.includes(localSearch) || r.description.includes(localSearch)),
+    const displayRecipes = categoryRecipes.filter(
+      (r) => r.title.includes(localSearch) || r.description.includes(localSearch),
     );
 
     return (
@@ -39,11 +70,11 @@ export function CategoryScreen() {
           <Text style={styles.subCategoryTitle}>{cat?.name}</Text>
         </View>
 
-        <View style={styles.searchContainer}>
+        <View style={[styles.searchContainer, searchFocused && styles.searchContainerFocused]}>
           <Ionicons
             name="search"
             size={SIZES.iconMedium}
-            color={COLORS.textSecondary}
+            color={searchFocused ? COLORS.primary : COLORS.textSecondary}
             style={styles.searchIcon}
           />
           <TextInput
@@ -52,21 +83,35 @@ export function CategoryScreen() {
             placeholderTextColor={COLORS.textSecondary}
             value={localSearch}
             onChangeText={setLocalSearch}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
           />
         </View>
 
-        <ScrollView
-          style={styles.subCategoryContent}
-          contentContainerStyle={styles.subCategoryScrollContent}
-        >
-          {displayRecipes.length > 0 ? (
-            displayRecipes.map((r) => <RecipeCard key={r.id} recipe={r} />)
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>该分类下暂无相关菜谱</Text>
-            </View>
-          )}
-        </ScrollView>
+        {categoryRecipesLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+          </View>
+        ) : categoryRecipesError ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="warning-outline" size={SIZES.iconLarge} color={COLORS.textSecondary} />
+            <Text style={styles.emptyText}>菜谱加载失败</Text>
+            <Text style={styles.errorText}>{categoryRecipesError.message}</Text>
+          </View>
+        ) : (
+          <ScrollView
+            style={styles.subCategoryContent}
+            contentContainerStyle={styles.subCategoryScrollContent}
+          >
+            {displayRecipes.length > 0 ? (
+              displayRecipes.map((r) => <RecipeCard key={r.id} recipe={r} />)
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>该分类下暂无相关菜谱</Text>
+              </View>
+            )}
+          </ScrollView>
+        )}
       </View>
     );
   }
@@ -142,6 +187,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
     flexDirection: 'row',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   detailContainer: {
     flex: 1,
@@ -264,6 +313,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     marginHorizontal: SPACING.lg,
     marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  searchContainerFocused: {
+    borderColor: COLORS.primary,
   },
   searchIcon: {
     marginRight: SPACING.sm,
@@ -289,5 +343,10 @@ const styles = StyleSheet.create({
   emptyText: {
     color: COLORS.textSecondary,
     fontSize: FONT_SIZES.md,
+  },
+  errorText: {
+    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.sm,
+    marginTop: SPACING.sm,
   },
 });

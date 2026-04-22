@@ -1,15 +1,15 @@
 import React from 'react';
-import { View, Text, ScrollView, Image, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, Image, StyleSheet, Modal, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigationContext } from '@/store/NavigationContext';
-import { useAuth, useRecipeActions } from '@/hooks';
+import { useRecipeActions, useRecipeDetail, useRecipeComments } from '@/hooks';
+import { useAuth } from '@/hooks';
 import { COLORS, SPACING, SIZES, FONT_SIZES } from '@/constants';
 
 export function RecipeDetailScreen() {
   const { activeRecipeId, setActiveRecipeId } = useNavigationContext();
   const {
-    getRecipeById,
     isLiked,
     isFavorited,
     handleToggleLike,
@@ -17,9 +17,21 @@ export function RecipeDetailScreen() {
     getCommentCount,
   } = useRecipeActions();
   const { checkAuth } = useAuth();
+  const { recipe, loading } = useRecipeDetail(activeRecipeId ? Number(activeRecipeId) : null);
+  const { comments: recipeComments, loading: commentsLoading } = useRecipeComments(
+    activeRecipeId ? Number(activeRecipeId) : null,
+  );
   const { top: safeTop } = useSafeAreaInsets();
 
-  const recipe = getRecipeById(activeRecipeId);
+  if (loading) {
+    return (
+      <Modal visible={!!activeRecipeId} animationType="slide">
+        <View style={[styles.container, styles.loadingContainer]}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      </Modal>
+    );
+  }
 
   if (!recipe) return null;
 
@@ -119,6 +131,44 @@ export function RecipeDetailScreen() {
               </View>
             ))}
           </View>
+
+          {/* 评论区域 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>评论 ({recipeComments.length})</Text>
+            {commentsLoading ? (
+              <ActivityIndicator size="small" color={COLORS.primary} style={{ marginVertical: SPACING.lg }} />
+            ) : recipeComments.length === 0 ? (
+              <Text style={styles.emptyCommentText}>暂无评论，快来发表第一条评论吧</Text>
+            ) : (
+              recipeComments.map((comment) => (
+                <View key={comment.id} style={styles.commentItem}>
+                  <View style={styles.commentHeader}>
+                    {comment.avatar ? (
+                      <Image source={{ uri: comment.avatar }} style={styles.commentAvatar} />
+                    ) : (
+                      <View style={styles.commentAvatarPlaceholder}>
+                        <Ionicons name="person-outline" size={16} color={COLORS.textSecondary} />
+                      </View>
+                    )}
+                    <Text style={styles.commentUsername}>{comment.username || '匿名用户'}</Text>
+                  </View>
+                  <Text style={styles.commentText}>{comment.text}</Text>
+                  {comment.images.length > 0 && (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      style={styles.commentImageScroll}
+                    >
+                      {comment.images.map((img) => (
+                        <Image key={img} source={{ uri: img }} style={styles.commentImage} />
+                      ))}
+                    </ScrollView>
+                  )}
+                  <Text style={styles.commentDate}>{comment.date}</Text>
+                </View>
+              ))
+            )}
+          </View>
         </View>
       </ScrollView>
     </Modal>
@@ -129,6 +179,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   detailImage: {
     width: '100%',
@@ -248,5 +302,63 @@ const styles = StyleSheet.create({
     height: SIZES.stepImageHeight,
     borderRadius: SIZES.borderRadius,
     marginTop: SPACING.sm,
+  },
+  emptyCommentText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    paddingVertical: SPACING.lg,
+  },
+  commentItem: {
+    backgroundColor: COLORS.surface,
+    padding: SPACING.lg,
+    borderRadius: SIZES.borderRadius,
+    marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  commentAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: SPACING.sm,
+  },
+  commentAvatarPlaceholder: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.borderLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.sm,
+  },
+  commentUsername: {
+    fontSize: FONT_SIZES.md,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  commentText: {
+    fontSize: FONT_SIZES.md,
+    color: COLORS.textPrimary,
+    lineHeight: SPACING.xxl,
+    marginBottom: SPACING.sm,
+  },
+  commentImageScroll: {
+    marginBottom: SPACING.sm,
+  },
+  commentImage: {
+    width: 80,
+    height: 80,
+    borderRadius: SIZES.borderRadiusSmall,
+    marginRight: SPACING.sm,
+  },
+  commentDate: {
+    fontSize: FONT_SIZES.xs,
+    color: COLORS.textSecondary,
   },
 });

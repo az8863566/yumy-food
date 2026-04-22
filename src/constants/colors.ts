@@ -3,8 +3,8 @@
  * 统一管理应用所有颜色值，禁止在组件中硬编码颜色
  */
 export const COLORS = {
-  /** 主色调 */
-  primary: '#FF6B6B',
+  /** 主色调（暗金色，深色主题下高级质感） */
+  primary: '#C8A96E',
   /** 背景色 */
   background: '#0a0a0a',
   /** 表面色（卡片、容器等） */
@@ -23,4 +23,8 @@ export const COLORS = {
   overlayLight: 'rgba(0,0,0,0.4)',
   /** 遮罩层颜色（深色） */
   overlayDark: 'rgba(0,0,0,0.6)',
+  /** 错误文字/边框色 */
+  error: '#FF4D4D',
+  /** 错误背景色（半透明） */
+  errorBg: 'rgba(255, 77, 77, 0.12)',
 } as const;
