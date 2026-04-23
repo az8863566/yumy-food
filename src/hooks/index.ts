@@ -12,3 +12,8 @@ export { useComments } from './useComments';
 export { useMyComments } from './useMyComments';
 export { useCategoryRecipes } from './useCategoryRecipes';
 export { useRecipeComments } from './useRecipeComments';
+export {
+  useToggleLikeMutation,
+  useToggleFavoriteMutation,
+  useAddCommentMutation,
+} from './useRecipeMutations';

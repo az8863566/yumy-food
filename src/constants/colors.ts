@@ -1,30 +1,57 @@
 /**
  * 主题色值常量
- * 统一管理应用所有颜色值，禁止在组件中硬编码颜色
+ * 完整支持 light/dark 双主题，通过 useAppTheme() 动态获取当前主题色值
  */
-export const COLORS = {
-  /** 主色调（暗金色，深色主题下高级质感） */
+
+export interface IThemeColors {
+  primary: string;
+  background: string;
+  surface: string;
+  textPrimary: string;
+  textSecondary: string;
+  border: string;
+  borderLight: string;
+  overlay: string;
+  overlayLight: string;
+  overlayDark: string;
+  error: string;
+  errorBg: string;
+}
+
+/** 深色主题（默认主题） */
+export const darkTheme: IThemeColors = {
   primary: '#C8A96E',
-  /** 背景色 */
   background: '#0a0a0a',
-  /** 表面色（卡片、容器等） */
   surface: '#1a1a1a',
-  /** 主要文字颜色 */
   textPrimary: '#ffffff',
-  /** 次要文字颜色 */
   textSecondary: '#888888',
-  /** 边框颜色 */
   border: 'rgba(255,255,255,0.1)',
-  /** 边框颜色（浅色） */
   borderLight: 'rgba(255,255,255,0.05)',
-  /** 遮罩层颜色 */
   overlay: 'rgba(0,0,0,0.5)',
-  /** 遮罩层颜色（半透明） */
   overlayLight: 'rgba(0,0,0,0.4)',
-  /** 遮罩层颜色（深色） */
   overlayDark: 'rgba(0,0,0,0.6)',
-  /** 错误文字/边框色 */
   error: '#FF4D4D',
-  /** 错误背景色（半透明） */
   errorBg: 'rgba(255, 77, 77, 0.12)',
 } as const;
+
+/** 浅色主题 */
+export const lightTheme: IThemeColors = {
+  primary: '#C8A96E',
+  background: '#f5f5f5',
+  surface: '#ffffff',
+  textPrimary: '#1a1a1a',
+  textSecondary: '#666666',
+  border: 'rgba(0,0,0,0.1)',
+  borderLight: 'rgba(0,0,0,0.05)',
+  overlay: 'rgba(0,0,0,0.5)',
+  overlayLight: 'rgba(0,0,0,0.4)',
+  overlayDark: 'rgba(0,0,0,0.6)',
+  error: '#FF4D4D',
+  errorBg: 'rgba(255, 77, 77, 0.12)',
+} as const;
+
+/**
+ * 向后兼容的 COLORS 导出（默认使用深色主题）
+ * 新代码推荐使用 useAppTheme() Hook 获取动态主题
+ */
+export const COLORS = darkTheme;

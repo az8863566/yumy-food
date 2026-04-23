@@ -1,57 +1,38 @@
 /**
  * 我的评论列表 Hook
- * 封装获取当前用户评论列表的逻辑
+ * 基于 TanStack Query 封装获取当前用户评论列表的逻辑
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getMyComments } from '@/api/endpoints';
 import { adaptComments } from '@/api/adapter';
-import type { Comment } from '@/@types';
-import type { PageParams } from '@/api/types';
+import type { IComment } from '@/types';
 
 interface UseMyCommentsReturn {
-  comments: Comment[];
+  comments: IComment[];
   loading: boolean;
   error: Error | null;
   total: number;
-  fetchMyComments: (params?: PageParams) => Promise<void>;
 }
 
 export function useMyComments(): UseMyCommentsReturn {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [total, setTotal] = useState(0);
-
-  const fetchMyComments = useCallback(async (params?: PageParams) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await getMyComments(params);
-
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['myComments'],
+    queryFn: async () => {
+      const response = await getMyComments();
       if (response.code === 0 && response.data) {
-        setComments(adaptComments(response.data.records || []));
-        setTotal(response.data.total || 0);
-      } else {
-        throw new Error(response.msg || response.message || '获取我的评论失败');
+        return {
+          comments: adaptComments(response.data.records || []),
+          total: response.data.total || 0,
+        };
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('未知错误'));
-      console.error('Failed to fetch my comments:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchMyComments();
-  }, [fetchMyComments]);
+      throw new Error(response.msg ?? response.message ?? '获取我的评论失败');
+    },
+  });
 
   return {
-    comments,
-    loading,
-    error,
-    total,
-    fetchMyComments,
+    comments: data?.comments ?? [],
+    loading: isLoading,
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+    total: data?.total ?? 0,
   };
 }

@@ -1,54 +1,40 @@
 /**
  * 菜谱评论列表 Hook
- * 根据菜谱 ID 获取该菜谱的评论列表
+ * 基于 TanStack Query 根据菜谱 ID 获取评论列表并缓存
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getComments } from '@/api/endpoints';
 import { adaptComments } from '@/api/adapter';
-import type { Comment } from '@/@types';
-import type { PageParams } from '@/api/types';
+import type { IComment } from '@/types';
 
 interface UseRecipeCommentsReturn {
-  comments: Comment[];
+  comments: IComment[];
   loading: boolean;
   error: Error | null;
   total: number;
-  fetchComments: (params?: PageParams) => Promise<void>;
 }
 
 export function useRecipeComments(recipeId: number | null): UseRecipeCommentsReturn {
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [total, setTotal] = useState(0);
-
-  const fetchComments = useCallback(async (params?: PageParams) => {
-    if (!recipeId) {
-      setComments([]);
-      setTotal(0);
-      return;
-    }
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await getComments(recipeId, params);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['recipeComments', recipeId],
+    queryFn: async () => {
+      if (!recipeId) return { comments: [] as IComment[], total: 0 };
+      const response = await getComments(recipeId);
       if (response.code === 0 && response.data) {
-        setComments(adaptComments(response.data.records || []));
-        setTotal(response.data.total || 0);
-      } else {
-        throw new Error(response.msg || response.message || '获取评论失败');
+        return {
+          comments: adaptComments(response.data.records || []),
+          total: response.data.total || 0,
+        };
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('未知错误'));
-      console.error('Failed to fetch comments:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [recipeId]);
+      throw new Error(response.msg ?? response.message ?? '获取评论失败');
+    },
+    enabled: !!recipeId,
+  });
 
-  useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
-
-  return { comments, loading, error, total, fetchComments };
+  return {
+    comments: data?.comments ?? [],
+    loading: isLoading,
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+    total: data?.total ?? 0,
+  };
 }

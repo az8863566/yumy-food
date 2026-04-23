@@ -1,28 +1,26 @@
 import React, { ReactNode } from 'react';
-import { AuthProvider, useAuthContext } from './AuthContext';
+import { useAuthStore } from './useAuthStore';
 import { RecipeProvider, useRecipeContext } from './RecipeContext';
 import { NavigationProvider, useNavigationContext } from './NavigationContext';
 
 /**
  * 应用 Provider 组合层
- * 聚合所有 Context Provider，提供全局状态
+ * 聚合剩余 Context Provider（Recipe + Navigation），Auth 已迁移至 Zustand
  */
 export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <NavigationProvider>
-      <AuthProvider>
-        <RecipeProvider>{children}</RecipeProvider>
-      </AuthProvider>
+      <RecipeProvider>{children}</RecipeProvider>
     </NavigationProvider>
   );
 }
 
 /**
  * 兼容旧版 useAppStore Hook
- * 合并所有 Context 的状态，保持向后兼容
+ * 合并 Zustand Auth Store 与剩余 Context 状态，保持向后兼容
  */
 export function useAppStore() {
-  const auth = useAuthContext();
+  const auth = useAuthStore();
   const recipe = useRecipeContext();
   const navigation = useNavigationContext();
 
@@ -48,12 +46,8 @@ export function useAppStore() {
     addComment: recipe.addComment,
 
     // Navigation 状态
-    currentTab: navigation.currentTab,
-    activeRecipeId: navigation.activeRecipeId,
     activeMinorCategoryId: navigation.activeMinorCategoryId,
     searchQuery: navigation.searchQuery,
-    setCurrentTab: navigation.setCurrentTab,
-    setActiveRecipeId: navigation.setActiveRecipeId,
     setActiveMinorCategoryId: navigation.setActiveMinorCategoryId,
     setSearchQuery: navigation.setSearchQuery,
   };

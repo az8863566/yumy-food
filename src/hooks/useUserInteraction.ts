@@ -1,16 +1,16 @@
 /**
  * 用户交互 Hook（点赞、收藏）
- * 封装点赞、收藏的状态管理和API调用
+ * 基于 TanStack Query 封装点赞、收藏的状态管理和 API 调用
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleLike, toggleFavorite, getMyLikedRecipeIds, getMyFavorites } from '@/api/endpoints';
 import { adaptRecipes } from '@/api/adapter';
-import type { Recipe } from '@/@types';
+import type { IRecipe } from '@/types';
 
 interface UseUserInteractionReturn {
   likedRecipeIds: Set<number>;
   favoritedRecipeIds: Set<number>;
-  myFavorites: Recipe[];
+  myFavorites: IRecipe[];
   loading: boolean;
   toggleLikeAction: (recipeId: number) => Promise<void>;
   toggleFavoriteAction: (recipeId: number) => Promise<void>;
@@ -20,95 +20,81 @@ interface UseUserInteractionReturn {
 }
 
 export function useUserInteraction(): UseUserInteractionReturn {
-  const [likedRecipeIds, setLikedRecipeIds] = useState<Set<number>>(new Set());
-  const [favoritedRecipeIds, setFavoritedRecipeIds] = useState<Set<number>>(new Set());
-  const [myFavorites, setMyFavorites] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const refreshInteraction = useCallback(async () => {
-    try {
-      setLoading(true);
-      // 获取点赞列表
-      const likesResponse = await getMyLikedRecipeIds();
-      if (likesResponse.code === 0 && likesResponse.data) {
-        setLikedRecipeIds(new Set(likesResponse.data));
-      }
-
-      // 获取收藏列表
-      const favoritesResponse = await getMyFavorites();
-      if (favoritesResponse.code === 0 && favoritesResponse.data) {
-        const favoriteRecipes = adaptRecipes(favoritesResponse.data.records || []);
-        setMyFavorites(favoriteRecipes);
-        setFavoritedRecipeIds(new Set(favoriteRecipes.map((r) => Number(r.id))));
-      }
-    } catch (error) {
-      console.error('Failed to refresh interaction:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshInteraction();
-  }, [refreshInteraction]);
-
-  const toggleLikeAction = useCallback(async (recipeId: number) => {
-    try {
-      const response = await toggleLike(recipeId);
+  const { data: likedRecipeIds = new Set<number>(), isLoading: likesLoading } = useQuery({
+    queryKey: ['likedRecipeIds'],
+    queryFn: async () => {
+      const response = await getMyLikedRecipeIds();
       if (response.code === 0 && response.data) {
-        setLikedRecipeIds((prev) => {
-          const newSet = new Set(prev);
-          if (response.data.liked) {
-            newSet.add(recipeId);
-          } else {
-            newSet.delete(recipeId);
-          }
-          return newSet;
-        });
+        return new Set(response.data);
       }
-    } catch (error) {
-      console.error('Failed to toggle like:', error);
-    }
-  }, []);
+      return new Set<number>();
+    },
+  });
 
-  const toggleFavoriteAction = useCallback(async (recipeId: number) => {
-    try {
-      const response = await toggleFavorite(recipeId);
+  const { data: myFavorites = [], isLoading: favoritesLoading } = useQuery({
+    queryKey: ['myFavorites'],
+    queryFn: async () => {
+      const response = await getMyFavorites();
       if (response.code === 0 && response.data) {
-        setFavoritedRecipeIds((prev) => {
-          const newSet = new Set(prev);
-          if (response.data.favorited) {
-            newSet.add(recipeId);
-          } else {
-            newSet.delete(recipeId);
-          }
-          return newSet;
-        });
+        return adaptRecipes(response.data.records || []);
       }
-    } catch (error) {
-      console.error('Failed to toggle favorite:', error);
-    }
-  }, []);
-
-  const isLiked = useCallback(
-    (recipeId: number) => {
-      return likedRecipeIds.has(recipeId);
+      return [] as IRecipe[];
     },
-    [likedRecipeIds],
-  );
+  });
 
-  const isFavorited = useCallback(
-    (recipeId: number) => {
-      return favoritedRecipeIds.has(recipeId);
+  const { data: favoritedRecipeIds = new Set<number>() } = useQuery({
+    queryKey: ['favoritedRecipeIds'],
+    queryFn: async () => {
+      const response = await getMyFavorites();
+      if (response.code === 0 && response.data) {
+        const recipes = adaptRecipes(response.data.records || []);
+        return new Set(recipes.map((r) => Number(r.id)));
+      }
+      return new Set<number>();
     },
-    [favoritedRecipeIds],
-  );
+  });
+
+  const toggleLikeMutation = useMutation({
+    mutationFn: toggleLike,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['likedRecipeIds'] });
+    },
+  });
+
+  const toggleFavoriteMutation = useMutation({
+    mutationFn: toggleFavorite,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myFavorites'] });
+      queryClient.invalidateQueries({ queryKey: ['favoritedRecipeIds'] });
+    },
+  });
+
+  const toggleLikeAction = async (recipeId: number) => {
+    await toggleLikeMutation.mutateAsync(recipeId);
+  };
+
+  const toggleFavoriteAction = async (recipeId: number) => {
+    await toggleFavoriteMutation.mutateAsync(recipeId);
+  };
+
+  const isLiked = (recipeId: number) => likedRecipeIds.has(recipeId);
+  const isFavorited = (recipeId: number) => favoritedRecipeIds.has(recipeId);
+
+  const refreshInteraction = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['likedRecipeIds'] }),
+      queryClient.invalidateQueries({ queryKey: ['myFavorites'] }),
+      queryClient.invalidateQueries({ queryKey: ['favoritedRecipeIds'] }),
+    ]);
+  };
 
   return {
     likedRecipeIds,
     favoritedRecipeIds,
     myFavorites,
-    loading,
+    loading: likesLoading || favoritesLoading,
     toggleLikeAction,
     toggleFavoriteAction,
     isLiked,

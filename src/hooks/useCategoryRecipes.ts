@@ -1,58 +1,39 @@
 /**
  * 分类菜谱查询 Hook
- * 根据子分类 ID 查询该分类下的菜谱列表
+ * 基于 TanStack Query 根据子分类 ID 查询菜谱列表并缓存
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getRecipes } from '@/api/endpoints';
 import { adaptRecipes } from '@/api/adapter';
-import type { Recipe } from '@/@types';
+import type { IRecipe } from '@/types';
 
 interface UseCategoryRecipesReturn {
-  recipes: Recipe[];
+  recipes: IRecipe[];
   loading: boolean;
   error: Error | null;
-  fetchRecipesByCategory: (categoryId: string) => Promise<void>;
 }
 
 export function useCategoryRecipes(categoryId: string | null): UseCategoryRecipesReturn {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchRecipesByCategory = useCallback(async (catId: string) => {
-    if (!catId) {
-      setRecipes([]);
-      return;
-    }
-    try {
-      setLoading(true);
-      setError(null);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['categoryRecipes', categoryId],
+    queryFn: async () => {
+      if (!categoryId) return [];
       const response = await getRecipes({
-        categoryId: Number(catId),
+        categoryId: Number(categoryId),
         pageNum: 1,
         pageSize: 50,
       });
       if (response.code === 0 && response.data) {
-        setRecipes(adaptRecipes(response.data.records || []));
-      } else {
-        throw new Error(response.msg || response.message || '获取分类菜谱失败');
+        return adaptRecipes(response.data.records || []);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('未知错误'));
-      console.error('Failed to fetch category recipes:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchRecipesByCategory(categoryId || '');
-  }, [categoryId, fetchRecipesByCategory]);
+      throw new Error(response.msg ?? response.message ?? '获取分类菜谱失败');
+    },
+    enabled: !!categoryId,
+  });
 
   return {
-    recipes,
-    loading,
-    error,
-    fetchRecipesByCategory,
+    recipes: data ?? [],
+    loading: isLoading,
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
   };
 }

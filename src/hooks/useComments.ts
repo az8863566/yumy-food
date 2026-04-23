@@ -1,8 +1,8 @@
 /**
  * 评论 Hook
- * 封装评论列表获取和发表评论的逻辑
+ * 基于 TanStack Query 封装评论列表获取和发表评论的逻辑
  */
-import { useState, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getComments, createComment } from '@/api/endpoints';
 import type { TocCommentVO, TocCommentCreateDTO, PageParams } from '@/api/types';
 
@@ -16,54 +16,54 @@ interface UseCommentsReturn {
 }
 
 export function useComments(): UseCommentsReturn {
-  const [comments, setComments] = useState<TocCommentVO[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [total, setTotal] = useState(0);
+  const queryClient = useQueryClient();
 
-  const fetchComments = useCallback(async (recipeId: number, params?: PageParams) => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['comments'],
+    queryFn: async () => ({ comments: [] as TocCommentVO[], total: 0 }),
+    enabled: false,
+  });
 
-      const response = await getComments(recipeId, params);
+  const fetchComments = async (recipeId: number, params?: PageParams) => {
+    await queryClient.prefetchQuery({
+      queryKey: ['comments', recipeId, params],
+      queryFn: async () => {
+        const response = await getComments(recipeId, params);
+        if (response.code === 0 && response.data) {
+          return {
+            comments: response.data.records || [],
+            total: response.data.total || 0,
+          };
+        }
+        throw new Error(response.msg ?? response.message ?? '获取评论列表失败');
+      },
+    });
+    await refetch();
+  };
 
-      if (response.code === 0 && response.data) {
-        setComments(response.data.records || []);
-        setTotal(response.data.total || 0);
-      } else {
-        throw new Error(response.msg || response.message || '获取评论列表失败');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('未知错误'));
-      console.error('Failed to fetch comments:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const addComment = useCallback(async (recipeId: number, data: TocCommentCreateDTO) => {
-    try {
+  const addCommentMutation = useMutation({
+    mutationFn: async ({ recipeId, data }: { recipeId: number; data: TocCommentCreateDTO }) => {
       const response = await createComment(recipeId, data);
-
-      if (response.code === 0) {
-        // 评论成功后刷新列表
-        await fetchComments(recipeId);
-      } else {
-        throw new Error(response.message || '发表评论失败');
+      if (response.code !== 0) {
+        throw new Error(response.message ?? '发表评论失败');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('未知错误'));
-      console.error('Failed to add comment:', err);
-      throw err;
-    }
-  }, [fetchComments]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+      queryClient.invalidateQueries({ queryKey: ['recipeComments'] });
+      queryClient.invalidateQueries({ queryKey: ['myComments'] });
+    },
+  });
+
+  const addComment = async (recipeId: number, data: TocCommentCreateDTO) => {
+    await addCommentMutation.mutateAsync({ recipeId, data });
+  };
 
   return {
-    comments,
-    loading,
-    error,
-    total,
+    comments: data?.comments ?? [],
+    loading: isLoading,
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+    total: data?.total ?? 0,
     fetchComments,
     addComment,
   };

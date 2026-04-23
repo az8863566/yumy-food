@@ -2,7 +2,15 @@
  * 用户交互相关 API（点赞、收藏）
  */
 import { api } from '@/api/client';
-import type { Result, IPage, TocRecipeVO, TocLikeVO, TocFavoriteVO, PageParams } from '@/api/types';
+import type {
+  Result,
+  IPage,
+  TocRecipeVO,
+  TocLikeVO,
+  TocFavoriteVO,
+  TocCommentVO,
+  PageParams,
+} from '@/api/types';
 
 /**
  * 点赞/取消点赞
@@ -36,5 +44,5 @@ export const getMyFavorites = (params?: PageParams) => {
  * 获取我的评论列表
  */
 export const getMyComments = (params?: PageParams) => {
-  return api.get<Result<IPage<any>>>('/api/toc/v1/users/me/comments', { params });
+  return api.get<Result<IPage<TocCommentVO>>>('/api/toc/v1/users/me/comments', { params });
 };

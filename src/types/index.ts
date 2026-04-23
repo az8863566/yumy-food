@@ -4,7 +4,7 @@
  */
 
 /** 用户类型 */
-export interface User {
+export interface IUser {
   id: string;
   username: string;
   password?: string;
@@ -12,13 +12,13 @@ export interface User {
 }
 
 /** 食材类型 */
-export interface Ingredient {
+export interface IIngredient {
   name: string;
   amount: string;
 }
 
 /** 菜谱步骤类型 */
-export interface RecipeStep {
+export interface IRecipeStep {
   id: number;
   description: string;
   image: string;
@@ -26,7 +26,7 @@ export interface RecipeStep {
 }
 
 /** 评论类型 */
-export interface Comment {
+export interface IComment {
   id: string;
   recipeId: string;
   text: string;
@@ -37,7 +37,7 @@ export interface Comment {
 }
 
 /** 菜谱类型 */
-export interface Recipe {
+export interface IRecipe {
   id: string;
   title: string;
   description: string;
@@ -47,18 +47,18 @@ export interface Recipe {
   difficulty: '简单' | '中等' | '困难';
   time: string;
   servings: number;
-  ingredients: Ingredient[];
-  steps: RecipeStep[];
+  ingredients: IIngredient[];
+  steps: IRecipeStep[];
 }
 
 /** 父级分类类型 */
-export interface ParentCategory {
+export interface IParentCategory {
   id: string;
   name: string;
 }
 
 /** 子级分类类型 */
-export interface SubCategory {
+export interface ISubCategory {
   id: string;
   parentId: string;
   name: string;
@@ -69,7 +69,7 @@ export interface SubCategory {
 export type TabType = 'home' | 'categories' | 'profile';
 
 /** 菜谱卡片组件 Props 类型 */
-export interface RecipeCardProps {
-  recipe: Recipe;
+export interface IRecipeCardProps {
+  recipe: IRecipe;
   indexRanking?: number;
 }

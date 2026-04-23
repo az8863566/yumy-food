@@ -1,12 +1,12 @@
-import { ParentCategory, SubCategory, Recipe, Comment } from '@/@types';
+import { IParentCategory, ISubCategory, IRecipe, IComment } from '@/types';
 
-export const parentCategories: ParentCategory[] = [
+export const parentCategories: IParentCategory[] = [
   { id: 'p1', name: '热门分类' },
   { id: 'p2', name: '菜系' },
   { id: 'p3', name: '烘焙甜品' },
 ];
 
-export const subCategories: SubCategory[] = [
+export const subCategories: ISubCategory[] = [
   // p1 热门分类
   { id: 'c1', parentId: 'p1', name: '家常菜', image: 'https://picsum.photos/seed/c1/200' },
   { id: 'c2', parentId: 'p1', name: '下饭菜', image: 'https://picsum.photos/seed/c2/200' },
@@ -22,7 +22,7 @@ export const subCategories: SubCategory[] = [
   { id: 'c10', parentId: 'p3', name: '饮品', image: 'https://picsum.photos/seed/c10/200' },
 ];
 
-export const initialComments: Comment[] = [
+export const initialComments: IComment[] = [
   {
     id: 'cmt1',
     recipeId: 'r1',
@@ -32,7 +32,7 @@ export const initialComments: Comment[] = [
   },
 ];
 
-export const initialRecipes: Recipe[] = [
+export const initialRecipes: IRecipe[] = [
   {
     id: 'r1',
     title: '秘制红烧肉',

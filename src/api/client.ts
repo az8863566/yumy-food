@@ -9,6 +9,21 @@ import * as SecureStore from 'expo-secure-store';
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 const API_TIMEOUT = 15000; // 15秒超时
 
+/** 后端错误响应结构 */
+interface IBackendErrorResponse {
+  msg?: string;
+  message?: string;
+  error?: string;
+  errorMessage?: string;
+  [key: string]: unknown;
+}
+
+/** 扩展的 Axios 错误，携带后端业务消息 */
+interface IApiError extends AxiosError {
+  backendMessage?: string;
+  responseData?: unknown;
+}
+
 /**
  * 创建 Axios 实例
  */
@@ -49,18 +64,15 @@ apiClient.interceptors.response.use(
     // 直接返回响应数据
     return response;
   },
-  async (error: AxiosError) => {
+  async (error: AxiosError<IBackendErrorResponse>) => {
+    const apiError = error as IApiError;
+
     // 处理错误
     if (error.response) {
       const { status, data } = error.response;
 
       // 尝试从后端响应中提取业务错误消息（支持多种字段名）
-      const backendMessage =
-        (data as any)?.msg ||
-        (data as any)?.message ||
-        (data as any)?.error ||
-        (data as any)?.errorMessage ||
-        '';
+      const backendMessage = data?.msg || data?.message || data?.error || data?.errorMessage || '';
 
       // 打印完整响应数据用于调试
       console.error(`[HTTP ${status}] Response data:`, JSON.stringify(data, null, 2));
@@ -87,21 +99,21 @@ apiClient.interceptors.response.use(
 
       // 将后端错误消息附加到 error 对象上，供上层业务使用
       if (backendMessage) {
-        (error as any).backendMessage = backendMessage;
+        apiError.backendMessage = backendMessage;
       }
       // 同时把完整响应数据也附加上去，方便上层解析
-      (error as any).responseData = data;
+      apiError.responseData = data;
     } else if (error.request) {
       // 请求已发送但没有收到响应
       console.error('Network Error: No response received');
-      (error as any).backendMessage = '网络异常，请检查网络连接';
+      apiError.backendMessage = '网络异常，请检查网络连接';
     } else {
       // 请求配置出错
       console.error('Request Error:', error.message);
-      (error as any).backendMessage = '请求出错，请稍后重试';
+      apiError.backendMessage = '请求出错，请稍后重试';
     }
 
-    return Promise.reject(error);
+    return Promise.reject(apiError);
   },
 );
 

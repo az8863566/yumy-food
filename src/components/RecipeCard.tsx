@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigationContext } from '@/store/NavigationContext';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useAuth, useRecipeActions } from '@/hooks';
-import type { RecipeCardProps } from '@/@types';
+import type { IRecipeCardProps } from '@/types';
 import { COLORS, SPACING, SIZES, FONT_SIZES, LINE_HEIGHTS } from '@/constants';
 
-export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, indexRanking }) => {
-  const { setActiveRecipeId } = useNavigationContext();
+export const RecipeCard: React.FC<IRecipeCardProps> = ({ recipe, indexRanking }) => {
   const { checkAuth } = useAuth();
   const { isLiked, isFavorited, getCommentCount, handleToggleLike, handleToggleFavorite } =
     useRecipeActions();
@@ -17,7 +17,7 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, indexRanking }) 
   const commentCount = getCommentCount(recipe.id);
 
   const handleCardClick = () => {
-    checkAuth(() => setActiveRecipeId(recipe.id));
+    checkAuth(() => router.push(`/recipe/${recipe.id}`));
   };
 
   const handleActionClick = (action: () => void) => {
@@ -25,19 +25,57 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, indexRanking }) 
   };
 
   return (
-    <TouchableOpacity style={styles.card} onPress={handleCardClick} activeOpacity={0.9}>
+    <TouchableOpacity
+      className="overflow-hidden rounded-2xl mb-4"
+      style={{ backgroundColor: COLORS.surface }}
+      onPress={handleCardClick}
+      activeOpacity={0.9}
+    >
       {indexRanking !== undefined && (
-        <View style={styles.rankingBadge}>
-          <Text style={styles.rankingText}>TOP {indexRanking}</Text>
+        <View
+          className="absolute z-10"
+          style={{
+            top: SPACING.sm,
+            left: SPACING.sm,
+            paddingHorizontal: SPACING.sm + 2,
+            paddingVertical: SPACING.xs + 1,
+            backgroundColor: 'rgba(0,0,0,0.65)',
+            borderRadius: SIZES.borderRadiusSmall,
+            borderWidth: 1,
+            borderColor: 'rgba(255,255,255,0.15)',
+          }}
+        >
+          <Text
+            className="font-bold"
+            style={{
+              color: COLORS.textPrimary,
+              fontSize: FONT_SIZES.xs,
+              letterSpacing: 0.5,
+            }}
+          >
+            TOP {indexRanking}
+          </Text>
         </View>
       )}
 
-      <View style={styles.imageContainer}>
-        <Image source={{ uri: recipe.image }} style={styles.image} />
+      <View className="relative" style={{ height: SIZES.cardImageHeight }}>
+        <Image
+          source={{ uri: recipe.image }}
+          className="w-full h-full"
+          contentFit="cover"
+          transition={200}
+        />
 
-        <View style={styles.actionButtons}>
+        <View
+          className="absolute flex-row z-10"
+          style={{ top: SPACING.sm, right: SPACING.sm, gap: SPACING.xs }}
+        >
           <TouchableOpacity
-            style={styles.actionButton}
+            className="p-2"
+            style={{
+              backgroundColor: COLORS.overlayLight,
+              borderRadius: SIZES.borderRadiusSmall,
+            }}
             onPress={() => handleActionClick(() => handleToggleLike(recipe.id))}
           >
             <Ionicons
@@ -48,7 +86,11 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, indexRanking }) 
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionButton}
+            className="p-2"
+            style={{
+              backgroundColor: COLORS.overlayLight,
+              borderRadius: SIZES.borderRadiusSmall,
+            }}
             onPress={() => handleActionClick(() => handleToggleFavorite(recipe.id))}
           >
             <Ionicons
@@ -59,37 +101,87 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, indexRanking }) 
           </TouchableOpacity>
         </View>
 
-        <View style={styles.difficultyBadge}>
-          <Text style={styles.difficultyText}>{recipe.difficulty}</Text>
+        <View
+          className="absolute"
+          style={{
+            bottom: SPACING.sm,
+            left: SPACING.sm,
+            paddingHorizontal: SPACING.xs,
+            paddingVertical: SPACING.xs,
+            backgroundColor: COLORS.overlayDark,
+            borderRadius: SIZES.borderRadiusSmall,
+          }}
+        >
+          <Text style={{ color: COLORS.textPrimary, fontSize: FONT_SIZES.xs }}>
+            {recipe.difficulty}
+          </Text>
         </View>
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>
+      <View
+        className="p-4"
+        style={{
+          borderTopWidth: 1,
+          borderTopColor: COLORS.borderLight,
+        }}
+      >
+        <Text
+          className="font-bold mb-1"
+          style={{ fontSize: FONT_SIZES.xl, color: COLORS.textPrimary }}
+          numberOfLines={1}
+        >
           {recipe.title}
         </Text>
-        <Text style={styles.description} numberOfLines={2}>
+        <Text
+          className="mb-3"
+          style={{
+            fontSize: FONT_SIZES.sm,
+            color: COLORS.textSecondary,
+            lineHeight: LINE_HEIGHTS.md,
+          }}
+          numberOfLines={2}
+        >
           {recipe.description}
         </Text>
 
-        <View style={styles.footer}>
-          <Text style={styles.timeText}>{recipe.time}</Text>
-          <View style={styles.stats}>
-            <View style={styles.statItem}>
+        <View
+          className="flex-row justify-between items-center pt-3"
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: COLORS.borderLight,
+          }}
+        >
+          <Text
+            className="font-medium"
+            style={{ fontSize: FONT_SIZES.sm, color: COLORS.textSecondary }}
+          >
+            {recipe.time}
+          </Text>
+          <View className="flex-row items-center" style={{ gap: SPACING.md }}>
+            <View className="flex-row items-center" style={{ gap: SPACING.xs }}>
               <Ionicons
                 name="chatbubble-outline"
                 size={SIZES.iconSmall}
                 color={COLORS.textSecondary}
               />
-              <Text style={styles.statText}>{commentCount}</Text>
+              <Text style={{ fontSize: FONT_SIZES.sm, color: COLORS.textSecondary }}>
+                {commentCount}
+              </Text>
             </View>
-            <View style={styles.statItem}>
+            <View className="flex-row items-center" style={{ gap: SPACING.xs }}>
               <Ionicons
                 name={liked ? 'heart' : 'heart-outline'}
                 size={SIZES.iconSmall}
                 color={liked ? COLORS.primary : COLORS.textSecondary}
               />
-              <Text style={[styles.statText, liked && styles.likedText]}>{recipe.likes}</Text>
+              <Text
+                style={[
+                  { fontSize: FONT_SIZES.sm, color: COLORS.textSecondary },
+                  liked && { color: COLORS.primary },
+                ]}
+              >
+                {recipe.likes}
+              </Text>
             </View>
           </View>
         </View>
@@ -97,111 +189,3 @@ export const RecipeCard: React.FC<RecipeCardProps> = ({ recipe, indexRanking }) 
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: SIZES.borderRadiusLarge,
-    overflow: 'hidden',
-    marginBottom: SPACING.lg,
-  },
-  rankingBadge: {
-    position: 'absolute',
-    top: SPACING.sm,
-    left: SPACING.sm,
-    paddingHorizontal: SPACING.sm + 2,
-    paddingVertical: SPACING.xs + 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    borderRadius: SIZES.borderRadiusSmall,
-    zIndex: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  rankingText: {
-    color: COLORS.textPrimary,
-    fontSize: FONT_SIZES.xs,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-  },
-  imageContainer: {
-    height: SIZES.cardImageHeight,
-    position: 'relative',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  actionButtons: {
-    position: 'absolute',
-    top: SPACING.sm,
-    right: SPACING.sm,
-    flexDirection: 'row',
-    gap: SPACING.xs,
-    zIndex: 10,
-  },
-  actionButton: {
-    padding: SPACING.sm,
-    backgroundColor: COLORS.overlayLight,
-    borderRadius: SIZES.borderRadiusSmall,
-  },
-  difficultyBadge: {
-    position: 'absolute',
-    bottom: SPACING.sm,
-    left: SPACING.sm,
-    paddingHorizontal: SPACING.xs,
-    paddingVertical: SPACING.xs,
-    backgroundColor: COLORS.overlayDark,
-    borderRadius: SIZES.borderRadiusSmall,
-  },
-  difficultyText: {
-    color: COLORS.textPrimary,
-    fontSize: FONT_SIZES.xs,
-  },
-  content: {
-    padding: SPACING.lg,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
-  },
-  title: {
-    fontSize: FONT_SIZES.xl,
-    fontWeight: 'bold',
-    color: COLORS.textPrimary,
-    marginBottom: SPACING.xs,
-  },
-  description: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    lineHeight: LINE_HEIGHTS.md,
-    marginBottom: SPACING.md,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: SPACING.md,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.borderLight,
-  },
-  timeText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
-  stats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-  },
-  statText: {
-    fontSize: FONT_SIZES.sm,
-    color: COLORS.textSecondary,
-  },
-  likedText: {
-    color: COLORS.primary,
-  },
-});

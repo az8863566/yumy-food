@@ -1,5 +1,5 @@
 import { useRecipeContext } from '@/store/RecipeContext';
-import type { Recipe } from '@/@types';
+import type { IRecipe } from '@/types';
 
 /**
  * 菜谱操作相关 Hook
@@ -54,7 +54,7 @@ export function useRecipeActions() {
   /**
    * 获取菜谱详情
    */
-  const getRecipeById = (recipeId: string | null): Recipe | undefined => {
+  const getRecipeById = (recipeId: string | null): IRecipe | undefined => {
     if (!recipeId) return undefined;
     return recipes.find((r) => r.id === recipeId);
   };
