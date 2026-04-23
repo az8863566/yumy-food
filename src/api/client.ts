@@ -3,7 +3,7 @@
  * 配置 Axios 实例、拦截器、错误处理
  */
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import { storageService } from '@/services/storage.service';
 
 // API 基础配置
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8080';
@@ -42,12 +42,12 @@ apiClient.interceptors.request.use(
   async (config) => {
     try {
       // 从 SecureStore 获取 Token
-      const token = await SecureStore.getItemAsync('auth_token');
+      const token = await storageService.getItemAsync('auth_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (error) {
-      console.error('Failed to get token from SecureStore:', error);
+      console.error('Failed to get token from storage:', error);
     }
     return config;
   },
@@ -81,7 +81,7 @@ apiClient.interceptors.response.use(
         case 401:
           // Token 过期或无效，清除本地 Token
           console.error('Unauthorized: Token expired or invalid');
-          await SecureStore.deleteItemAsync('auth_token');
+          await storageService.deleteItemAsync('auth_token');
           // TODO: 可以在此处触发全局的登出逻辑
           break;
         case 403:

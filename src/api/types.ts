@@ -28,12 +28,14 @@ export interface TocUserVO {
   username: string;
   nickname?: string;
   avatar?: string;
+  signature?: string;
 }
 
 /** C端用户更新 DTO */
 export interface TocUserUpdateDTO {
   nickname?: string;
   avatar?: string;
+  signature?: string;
   email?: string;
   phone?: string;
 }
@@ -149,6 +151,15 @@ export interface TocSubCategoryVO {
   name: string;
   parentId: number;
   image?: string;
+}
+
+/** 文件上传响应 VO */
+export interface UploadVO {
+  fileId: number;
+  url: string;
+  originalName: string;
+  storedName: string;
+  size: number;
 }
 
 /** 分页查询参数 */

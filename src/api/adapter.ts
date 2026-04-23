@@ -115,6 +115,8 @@ export function adaptUser(apiUser: TocUserVO): IUser {
   return {
     id: String(apiUser.userId),
     username: apiUser.username,
+    nickname: apiUser.nickname,
+    signature: apiUser.signature,
     avatar: apiUser.avatar || '',
   };
 }
