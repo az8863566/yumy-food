@@ -9,26 +9,37 @@ interface IngredientListProps {
 
 export function IngredientList({ ingredients }: IngredientListProps) {
   return (
-    <View className="mb-6">
+    <View
+      className="mb-6 p-5 rounded-xl"
+      style={{
+        backgroundColor: COLORS.surface,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+      }}
+    >
       <Text
-        className="font-bold mb-4"
-        style={{ fontSize: FONT_SIZES.xxl, color: COLORS.textPrimary }}
+        className="font-semibold mb-5"
+        style={{
+          fontSize: FONT_SIZES.xs,
+          color: COLORS.primary,
+          letterSpacing: 2,
+        }}
       >
-        食材
+        食材准备 / Ingredients
       </Text>
-      {ingredients.map((ingredient) => (
+      {ingredients.map((ingredient, index) => (
         <View
           key={ingredient.name}
           className="flex-row justify-between py-3"
           style={{
-            borderBottomWidth: 1,
-            borderBottomColor: COLORS.borderLight,
+            borderBottomWidth: index < ingredients.length - 1 ? 1 : 0,
+            borderBottomColor: 'rgba(255,255,255,0.05)',
           }}
         >
-          <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textPrimary }}>
+          <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textPrimary, opacity: 0.9 }}>
             {ingredient.name}
           </Text>
-          <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary }}>
+          <Text style={{ fontSize: FONT_SIZES.sm, color: COLORS.textSecondary }}>
             {ingredient.amount}
           </Text>
         </View>

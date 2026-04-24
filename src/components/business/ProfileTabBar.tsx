@@ -27,17 +27,19 @@ export function ProfileTabBar({
 
   return (
     <View
-      className="flex-row relative mt-1"
       style={{
+        flexDirection: 'row',
+        position: 'relative',
+        marginTop: 4,
         backgroundColor: COLORS.surface,
         borderTopWidth: 1,
-        borderTopColor: COLORS.borderLight,
+        borderTopColor: 'rgba(255,255,255,0.05)',
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.borderLight,
+        borderBottomColor: 'rgba(255,255,255,0.05)',
       }}
     >
       <TouchableOpacity
-        className="flex-1 py-4 items-center"
+        style={{ flex: 1, paddingVertical: 16, alignItems: 'center' }}
         onPress={() => onTabChange('favorites')}
         activeOpacity={0.7}
       >
@@ -55,7 +57,7 @@ export function ProfileTabBar({
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
-        className="flex-1 py-4 items-center"
+        style={{ flex: 1, paddingVertical: 16, alignItems: 'center' }}
         onPress={() => onTabChange('comments')}
         activeOpacity={0.7}
       >
@@ -74,8 +76,10 @@ export function ProfileTabBar({
       </TouchableOpacity>
 
       <View
-        className="absolute bottom-0 h-0.5"
         style={{
+          position: 'absolute',
+          bottom: 0,
+          height: 2,
           left: tabIndicatorLeft,
           width: TAB_INDICATOR_WIDTH,
           backgroundColor: COLORS.primary,

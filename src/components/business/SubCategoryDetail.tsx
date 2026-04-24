@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import { RecipeCard } from '@components/RecipeCard';
 import { COLORS, SPACING, SIZES, FONT_SIZES } from '@/constants';
 import type { IRecipe, ISubCategory } from '@/types';
@@ -33,33 +33,43 @@ export function SubCategoryDetail({
   );
 
   return (
-    <View className="flex-1 flex-col" style={{ backgroundColor: COLORS.background }}>
+    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: COLORS.background }}>
       {/* 头部导航 */}
-      <View className="flex-row items-center pt-4 pb-3 px-4" style={{ gap: SPACING.md }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 16, paddingBottom: 12, paddingHorizontal: 16, gap: SPACING.md }}>
         <TouchableOpacity
-          className="justify-center items-center"
           style={{
-            width: SIZES.circleButton + 4,
-            height: SIZES.circleButton + 4,
-            borderRadius: (SIZES.circleButton + 4) / 2,
-            backgroundColor: COLORS.surface,
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: 'rgba(255,255,255,0.05)',
             borderWidth: 1,
-            borderColor: COLORS.border,
+            borderColor: 'rgba(255,255,255,0.1)',
           }}
           onPress={onBack}
         >
-          <Ionicons name="chevron-back" size={SIZES.iconLarge} color={COLORS.textPrimary} />
+          <Ionicons name="chevron-back" size={20} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text className="font-bold" style={{ fontSize: FONT_SIZES.xxl, color: COLORS.textPrimary }}>
+        <Text style={{ fontWeight: 'bold', fontSize: FONT_SIZES.xxl, color: COLORS.textPrimary }}>
           {cat?.name}
         </Text>
       </View>
 
       {/* 搜索框 */}
       <View
-        className="flex-row items-center rounded-xl px-4 mb-4 mx-4"
         style={[
-          { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border },
+          {
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderRadius: 12,
+            paddingHorizontal: 16,
+            marginBottom: 16,
+            marginHorizontal: 16,
+            backgroundColor: COLORS.surface,
+            borderWidth: 1,
+            borderColor: COLORS.border,
+          },
           searchFocused && { borderColor: COLORS.primary },
         ]}
       >
@@ -70,8 +80,7 @@ export function SubCategoryDetail({
           style={{ marginRight: SPACING.sm }}
         />
         <TextInput
-          className="flex-1 py-3"
-          style={{ color: COLORS.textPrimary, fontSize: FONT_SIZES.md }}
+          style={{ flex: 1, paddingVertical: 12, color: COLORS.textPrimary, fontSize: FONT_SIZES.md }}
           placeholder={`在 ${cat?.name} 中搜索...`}
           placeholderTextColor={COLORS.textSecondary}
           value={searchQuery}
@@ -83,19 +92,19 @@ export function SubCategoryDetail({
 
       {/* 菜谱列表 */}
       {loading ? (
-        <View className="flex-1 justify-center items-center">
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
       ) : error ? (
-        <View className="items-center justify-center py-16">
+        <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
           <Ionicons name="warning-outline" size={SIZES.iconLarge} color={COLORS.textSecondary} />
           <Text style={{ color: COLORS.textSecondary, fontSize: FONT_SIZES.md }}>菜谱加载失败</Text>
-          <Text className="mt-1" style={{ color: COLORS.textSecondary, fontSize: FONT_SIZES.sm }}>
+          <Text style={{ marginTop: 4, color: COLORS.textSecondary, fontSize: FONT_SIZES.sm }}>
             {error.message}
           </Text>
         </View>
       ) : (
-        <View className="flex-1">
+        <View style={{ flex: 1 }}>
           <FlashList
             data={displayRecipes}
             renderItem={RenderRecipeCard}
@@ -103,8 +112,10 @@ export function SubCategoryDetail({
             estimatedItemSize={160}
             contentContainerStyle={{ paddingHorizontal: SPACING.lg, paddingBottom: 100 }}
             ListEmptyComponent={
-              <View className="items-center justify-center py-16">
-                <Text style={{ color: COLORS.textSecondary, fontSize: FONT_SIZES.md }}>
+              <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
+                <Text
+                  style={{ textAlign: 'center', marginTop: 40, color: COLORS.textSecondary, fontSize: FONT_SIZES.sm }}
+                >
                   该分类下暂无相关菜谱
                 </Text>
               </View>

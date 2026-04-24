@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 
 /**
@@ -12,14 +13,17 @@ export function useAuth() {
    * 登录成功后会自动执行 callback（如跳转到菜谱详情）
    * @param callback 登录成功后执行的回调函数
    */
-  const checkAuth = (callback: () => void) => {
-    if (!currentUser) {
-      setPendingAction(callback);
-      setShowAuthModal(true);
-    } else {
-      callback();
-    }
-  };
+  const checkAuth = useCallback(
+    (callback: () => void) => {
+      if (!currentUser) {
+        setPendingAction(callback);
+        setShowAuthModal(true);
+      } else {
+        callback();
+      }
+    },
+    [currentUser, setPendingAction, setShowAuthModal],
+  );
 
   return {
     currentUser,

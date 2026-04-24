@@ -20,32 +20,39 @@ export function CategorySidebar({
         width: 96,
         backgroundColor: COLORS.surface,
         borderRightWidth: 1,
-        borderRightColor: COLORS.borderLight,
+        borderRightColor: 'rgba(255,255,255,0.05)',
       }}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         {parentCategories.map((parent) => (
           <TouchableOpacity
             key={parent.id}
-            className="items-center relative"
             style={[
               {
+                alignItems: 'center',
+                position: 'relative',
                 paddingVertical: SPACING.xl,
                 paddingHorizontal: SPACING.xs,
                 borderLeftWidth: 2,
                 borderLeftColor: 'transparent',
               },
               selectedParent === parent.id && {
-                backgroundColor: COLORS.overlayLight,
+                backgroundColor: 'rgba(255,255,255,0.05)',
                 borderLeftColor: COLORS.primary,
               },
             ]}
             onPress={() => onSelectParent(parent.id)}
           >
             <View
-              className="absolute left-0 top-0 bottom-0 w-0.5"
               style={[
-                { backgroundColor: 'transparent' },
+                {
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 2,
+                  backgroundColor: 'transparent',
+                },
                 selectedParent === parent.id && { backgroundColor: COLORS.primary },
               ]}
             />

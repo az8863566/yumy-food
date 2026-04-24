@@ -3,7 +3,7 @@
  * 替代原来的 AuthContext，管理用户会话状态
  */
 import { create } from 'zustand';
-import * as SecureStore from 'expo-secure-store';
+import { storageService } from '@/services/storage.service';
 import type { IUser } from '@/types';
 import type { TocAuthRegisterDTO } from '@/api/types';
 import { login as loginApi, register as registerApi, getCurrentUser } from '@/api/endpoints';
@@ -28,6 +28,8 @@ interface AuthState {
 
   /** 设置当前用户 */
   login: (user: IUser) => void;
+  /** 更新当前用户信息 */
+  updateCurrentUser: (user: Partial<IUser>) => void;
   /** 异步登录 */
   loginAsync: (username: string, password: string) => Promise<void>;
   /** 异步注册 */
@@ -63,12 +65,17 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: (user) => set({ currentUser: user }),
 
+  updateCurrentUser: (user) =>
+    set((state) => ({
+      currentUser: state.currentUser ? { ...state.currentUser, ...user } : null,
+    })),
+
   loginAsync: async (username, password) => {
     set({ isAuthLoading: true });
     try {
       const response = await loginApi({ username, password });
       if (response.code === 0 && response.data) {
-        await SecureStore.setItemAsync('auth_token', response.data.token);
+        await storageService.setItemAsync('auth_token', response.data.token);
         set({ currentUser: adaptUser(response.data.user) });
       } else {
         throw new Error(response.msg ?? response.message ?? '登录失败');
@@ -86,7 +93,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await registerApi(data);
       if (response.code === 0 && response.data) {
-        await SecureStore.setItemAsync('auth_token', response.data.token);
+        await storageService.setItemAsync('auth_token', response.data.token);
         set({ currentUser: adaptUser(response.data.user) });
       } else {
         throw new Error(response.msg ?? response.message ?? '注册失败');
@@ -100,7 +107,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: async () => {
-    await SecureStore.deleteItemAsync('auth_token');
+    await storageService.deleteItemAsync('auth_token');
     set({ currentUser: null, pendingAction: null });
   },
 
@@ -110,18 +117,18 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initAuth: async () => {
     try {
-      const token = await SecureStore.getItemAsync('auth_token');
+      const token = await storageService.getItemAsync('auth_token');
       if (token) {
         const response = await getCurrentUser();
         if (response.code === 0 && response.data) {
           set({ currentUser: adaptUser(response.data) });
         } else {
-          await SecureStore.deleteItemAsync('auth_token');
+          await storageService.deleteItemAsync('auth_token');
         }
       }
     } catch (error: unknown) {
       console.error('Init auth failed:', error);
-      await SecureStore.deleteItemAsync('auth_token');
+      await storageService.deleteItemAsync('auth_token');
     }
   },
 }));

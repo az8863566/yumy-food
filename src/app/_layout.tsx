@@ -2,10 +2,18 @@ import React, { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Stack } from 'expo-router';
+import { cssInterop } from 'nativewind';
+import { Image } from 'expo-image';
+import '../theme/global.css';
 import { QueryClientProvider } from '@tanstack/react-query';
+
+// 让 expo-image 支持 className（NativeWind v4 cssInterop）
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+cssInterop(Image as any, { className: 'style' });
 import { AppProvider } from '@/store';
 import { useAuthStore } from '@/store/useAuthStore';
 import { queryClient } from '@/api/queryClient';
+import { AuthModal } from '@/components/business/AuthModal';
 
 /**
  * 全局根布局
@@ -30,6 +38,7 @@ export default function RootLayout() {
               options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
             />
           </Stack>
+          <AuthModal />
           <StatusBar style="auto" />
         </AppProvider>
       </QueryClientProvider>

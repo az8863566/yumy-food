@@ -1,14 +1,13 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { ErrorBoundary as ReactErrorBoundary } from 'react-error-boundary';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SPACING, SIZES, FONT_SIZES } from '@/constants';
 
 function ErrorFallback({
   error,
   resetErrorBoundary,
 }: {
-  error: unknown;
+  error: Error | null;
   resetErrorBoundary: () => void;
 }) {
   const errorMessage = error instanceof Error ? error.toString() : String(error);
@@ -110,10 +109,37 @@ interface Props {
   children: React.ReactNode;
 }
 
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
 /**
- * Error Boundary 组件（函数式实现）
+ * Error Boundary 组件（类组件实现）
  * 捕获子组件树中的 JavaScript 错误，防止整个应用白屏
  */
-export function ErrorBoundary({ children }: Props) {
-  return <ReactErrorBoundary FallbackComponent={ErrorFallback}>{children}</ReactErrorBoundary>;
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return <ErrorFallback error={this.state.error} resetErrorBoundary={this.handleReset} />;
+    }
+    return this.props.children;
+  }
 }

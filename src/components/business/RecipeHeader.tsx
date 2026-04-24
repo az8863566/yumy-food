@@ -1,10 +1,10 @@
-import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import { COLORS, SPACING, SIZES, FONT_SIZES } from '@/constants';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { COLORS, SIZES } from '@/constants';
 import type { IRecipe } from '@/types';
 
 interface RecipeHeaderProps {
@@ -15,6 +15,17 @@ interface RecipeHeaderProps {
   onToggleLike: () => void;
   onToggleFavorite: () => void;
 }
+
+const NavButton = ({ onPress, icon, color }: { onPress: () => void; icon: any; color: string }) => (
+  <TouchableOpacity
+    className="w-9 h-9 rounded-lg border justify-center items-center"
+    style={{ backgroundColor: 'rgba(0,0,0,0.4)', borderColor: 'rgba(255,255,255,0.1)' }}
+    onPress={onPress}
+    hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+  >
+    <Ionicons name={icon} size={20} color={color} />
+  </TouchableOpacity>
+);
 
 export function RecipeHeader({
   recipe,
@@ -27,130 +38,115 @@ export function RecipeHeader({
   const { top: safeTop } = useSafeAreaInsets();
 
   return (
-    <>
-      <Image
-        source={{ uri: recipe.image }}
-        className="w-full"
-        style={{ height: SIZES.detailImageHeight }}
-        contentFit="cover"
-        transition={200}
-      />
-
-      <TouchableOpacity
-        className="absolute justify-center items-center"
-        style={{
-          left: SPACING.lg,
-          top: safeTop + SPACING.lg,
-          width: 36,
-          height: 36,
-          borderRadius: 8,
-          backgroundColor: 'rgba(0,0,0,0.4)',
-          borderWidth: 1,
-          borderColor: COLORS.border,
-        }}
-        onPress={() => router.back()}
-      >
-        <Ionicons name="chevron-back" size={SIZES.iconLarge} color="#ffffff" />
-      </TouchableOpacity>
-
-      <View
-        className="absolute flex-row"
-        style={{ right: SPACING.lg, top: safeTop + SPACING.lg, gap: SPACING.xs }}
-      >
-        <TouchableOpacity
-          className="justify-center items-center"
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            borderWidth: 1,
-            borderColor: COLORS.border,
-          }}
-          onPress={onToggleLike}
-        >
-          <Ionicons
-            name={liked ? 'heart' : 'heart-outline'}
-            size={18}
-            color={liked ? COLORS.primary : '#ffffff'}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="justify-center items-center"
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            backgroundColor: 'rgba(0,0,0,0.4)',
-            borderWidth: 1,
-            borderColor: COLORS.border,
-          }}
-          onPress={onToggleFavorite}
-        >
-          <Ionicons
-            name={favorited ? 'bookmark' : 'bookmark-outline'}
-            size={18}
-            color={favorited ? COLORS.primary : '#ffffff'}
-          />
-        </TouchableOpacity>
+    <View className="w-full relative overflow-hidden" style={{ height: SIZES.detailImageHeight }}>
+      {/* 图片层（用 View 包裹实现绝对定位） */}
+      <View className="absolute top-0 left-0 right-0 bottom-0 z-0">
+        <Image
+          source={{ uri: recipe.image }}
+          style={{ width: '100%', height: '100%', opacity: 0.7 }}
+          contentFit="cover"
+          transition={200}
+        />
       </View>
 
-      <View className="p-4">
+      {/* 底部渐变层（用 View 控制绝对定位，LinearGradient 只负责变色） */}
+      <View className="absolute bottom-0 left-0 right-0 h-[200px] z-10">
+        <LinearGradient colors={['transparent', COLORS.background]} style={{ flex: 1 }} />
+      </View>
+
+      {/* 顶部渐变层 */}
+      <View className="absolute top-0 left-0 right-0 z-10" style={{ height: safeTop + 80 }}>
+        <LinearGradient colors={['rgba(0,0,0,0.7)', 'transparent']} style={{ flex: 1 }} />
+      </View>
+
+      {/* 顶部导航栏 */}
+      <View
+        className="absolute top-0 left-0 right-0 flex-row justify-between items-center px-4 z-30"
+        style={{ paddingTop: safeTop + 16 }}
+      >
+        <NavButton onPress={() => router.back()} icon="chevron-back" color="#ffffff" />
+
+        <View className="flex-row gap-3">
+          <NavButton
+            onPress={onToggleLike}
+            icon={liked ? 'heart' : 'heart-outline'}
+            color={liked ? COLORS.primary : '#ffffff'}
+          />
+          <NavButton
+            onPress={onToggleFavorite}
+            icon={favorited ? 'bookmark' : 'bookmark-outline'}
+            color={favorited ? COLORS.primary : '#ffffff'}
+          />
+        </View>
+      </View>
+
+      {/* 内容区：绝对定位贴合图片底部 */}
+      <View className="absolute bottom-0 left-0 right-0 px-4 z-30" style={{ paddingBottom: 24 }}>
         <Text
-          className="font-bold mb-4"
-          style={{ fontSize: FONT_SIZES.xxxl, color: COLORS.textPrimary }}
+          className="font-bold mb-2 text-[28px] leading-8"
+          style={{ color: COLORS.textPrimary }}
         >
           {recipe.title}
         </Text>
 
-        <View className="flex-row mb-4" style={{ gap: SPACING.lg }}>
-          <View className="flex-row items-center" style={{ gap: SPACING.xs }}>
-            <Ionicons name="heart-outline" size={SIZES.iconSmall} color={COLORS.primary} />
-            <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary }}>
+        <Text className="mb-4 text-sm opacity-80 leading-6" style={{ color: COLORS.textSecondary }}>
+          {recipe.description}
+        </Text>
+
+        <View className="flex-row gap-5 mb-4">
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="heart" size={14} color={COLORS.primary} />
+            <Text className="text-xs" style={{ color: COLORS.textSecondary }}>
               {recipe.likes} 人点赞
             </Text>
           </View>
-          <View className="flex-row items-center" style={{ gap: SPACING.xs }}>
-            <Ionicons
-              name="chatbubble-outline"
-              size={SIZES.iconSmall}
-              color={COLORS.textSecondary}
-            />
-            <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary }}>
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="chatbubble-outline" size={14} color={COLORS.textSecondary} />
+            <Text className="text-xs" style={{ color: COLORS.textSecondary }}>
               {commentCount} 条评价
-            </Text>
-          </View>
-          <View className="flex-row items-center" style={{ gap: SPACING.xs }}>
-            <Ionicons name="time-outline" size={SIZES.iconSmall} color={COLORS.textSecondary} />
-            <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary }}>
-              {recipe.time}
-            </Text>
-          </View>
-          <View className="flex-row items-center" style={{ gap: SPACING.xs }}>
-            <Ionicons name="people-outline" size={SIZES.iconSmall} color={COLORS.textSecondary} />
-            <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary }}>
-              {recipe.servings}人份
-            </Text>
-          </View>
-          <View className="flex-row items-center" style={{ gap: SPACING.xs }}>
-            <Ionicons name="flame-outline" size={SIZES.iconSmall} color={COLORS.textSecondary} />
-            <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary }}>
-              {recipe.difficulty}
             </Text>
           </View>
         </View>
 
-        <Text
-          className="mb-6"
+        {/* 信息卡片：难度 / 耗时 / 人数 */}
+        <View
+          className="flex-row items-center py-5 px-2 rounded-xl border-y border-x"
           style={{
-            fontSize: FONT_SIZES.md,
-            color: COLORS.textSecondary,
-            lineHeight: SPACING.xxl,
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            borderColor: 'rgba(255,255,255,0.1)',
           }}
         >
-          {recipe.description}
-        </Text>
+          <View className="flex-col items-center gap-1 w-1/3">
+            <Text className="text-xs tracking-widest" style={{ color: COLORS.textSecondary }}>
+              难度
+            </Text>
+            <Text className="text-sm font-medium" style={{ color: COLORS.textPrimary }}>
+              {recipe.difficulty}
+            </Text>
+          </View>
+
+          <View
+            className="flex-col items-center gap-1 w-1/3 border-x"
+            style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+          >
+            <Text className="text-xs tracking-widest" style={{ color: COLORS.textSecondary }}>
+              耗时
+            </Text>
+            <Text className="text-sm font-medium" style={{ color: COLORS.textPrimary }}>
+              {recipe.time}
+            </Text>
+          </View>
+
+          <View className="flex-col items-center gap-1 w-1/3">
+            <Text className="text-xs tracking-widest" style={{ color: COLORS.textSecondary }}>
+              人数
+            </Text>
+            <Text className="text-sm font-medium" style={{ color: COLORS.textPrimary }}>
+              {recipe.servings} 人份
+            </Text>
+          </View>
+        </View>
       </View>
-    </>
+    </View>
   );
 }

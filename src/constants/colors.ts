@@ -20,11 +20,11 @@ export interface IThemeColors {
 
 /** 深色主题（默认主题） */
 export const darkTheme: IThemeColors = {
-  primary: '#C8A96E',
-  background: '#0a0a0a',
-  surface: '#1a1a1a',
-  textPrimary: '#ffffff',
-  textSecondary: '#888888',
+  primary: '#C5A059',
+  background: '#0A0A0B',
+  surface: '#161618',
+  textPrimary: '#E5E5E7',
+  textSecondary: '#8E9299',
   border: 'rgba(255,255,255,0.1)',
   borderLight: 'rgba(255,255,255,0.05)',
   overlay: 'rgba(0,0,0,0.5)',
@@ -36,7 +36,7 @@ export const darkTheme: IThemeColors = {
 
 /** 浅色主题 */
 export const lightTheme: IThemeColors = {
-  primary: '#C8A96E',
+  primary: '#C5A059',
   background: '#f5f5f5',
   surface: '#ffffff',
   textPrimary: '#1a1a1a',

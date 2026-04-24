@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigationContext } from '@/store/NavigationContext';
 import { useSearchRecipes, useCategories } from '@/hooks';
 import { RecipeCard } from '@components/RecipeCard';
@@ -20,14 +20,26 @@ import type { ISubCategory } from '@/types';
 function RecipeCardSkeleton() {
   return (
     <View
-      className="flex-row rounded-xl overflow-hidden"
-      style={{ backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border }}
+      style={{
+        flexDirection: 'row',
+        borderRadius: 12,
+        overflow: 'hidden',
+        backgroundColor: COLORS.surface,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+      }}
     >
-      <View className="w-[120px] h-[100px]" style={{ backgroundColor: COLORS.border }} />
-      <View className="flex-1 p-4 justify-center" style={{ gap: SPACING.sm }}>
-        <View className="h-4 w-[60%] rounded" style={{ backgroundColor: COLORS.border }} />
-        <View className="h-3 w-[80%] rounded" style={{ backgroundColor: COLORS.border }} />
-        <View className="h-3 w-[40%] rounded" style={{ backgroundColor: COLORS.border }} />
+      <View style={{ width: 120, height: 100, backgroundColor: COLORS.border }} />
+      <View style={{ flex: 1, padding: 16, justifyContent: 'center', gap: SPACING.sm }}>
+        <View
+          style={{ height: 16, width: '60%', borderRadius: 4, backgroundColor: COLORS.border }}
+        />
+        <View
+          style={{ height: 12, width: '80%', borderRadius: 4, backgroundColor: COLORS.border }}
+        />
+        <View
+          style={{ height: 12, width: '40%', borderRadius: 4, backgroundColor: COLORS.border }}
+        />
       </View>
     </View>
   );
@@ -39,30 +51,36 @@ function QuickCategoryItem({ cat, onPress }: { cat: ISubCategory; onPress: () =>
 
   return (
     <TouchableOpacity
-      className="w-[25%] items-center mb-4"
+      style={{ width: '25%', alignItems: 'center', marginBottom: 16 }}
       onPress={onPress}
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
       activeOpacity={0.8}
     >
       <View
-        className="w-14 h-14 rounded-full overflow-hidden mb-1"
         style={[
-          { borderWidth: 1, borderColor: COLORS.border },
+          {
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            overflow: 'hidden',
+            marginBottom: 4,
+            borderWidth: 1,
+            borderColor: COLORS.border,
+          },
           pressed && { borderColor: COLORS.primary, borderWidth: 2 },
         ]}
       >
         <Image
           source={{ uri: cat.image || 'https://picsum.photos/200' }}
-          className="w-full h-full"
+          style={{ width: '100%', height: '100%', opacity: pressed ? 1 : 0.7 }}
           contentFit="cover"
           transition={200}
         />
       </View>
       <Text
-        className="text-xs"
         style={[
-          { color: COLORS.textSecondary },
+          { color: COLORS.textSecondary, fontSize: 12 },
           pressed && { color: COLORS.primary, fontWeight: '500' },
         ]}
       >
@@ -87,14 +105,31 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      className="flex-1"
-      style={{ backgroundColor: COLORS.background }}
+      style={{ flex: 1, backgroundColor: COLORS.background }}
       contentContainerStyle={{ padding: SPACING.lg, paddingBottom: 100 }}
     >
+      {/* 标题与搜索框 */}
+      <View style={{ marginBottom: 24 }}>
+        <Text style={{ fontSize: FONT_SIZES.title, color: COLORS.textPrimary, fontWeight: 'bold' }}>
+          甄味{' '}
+          <Text style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary, fontWeight: '300' }}>
+            FlavorGuide
+          </Text>
+        </Text>
+      </View>
+
       <View
-        className="flex-row items-center rounded-xl px-4 mb-6"
         style={[
-          { backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border },
+          {
+            flexDirection: 'row',
+            alignItems: 'center',
+            borderRadius: 12,
+            paddingHorizontal: 16,
+            marginBottom: 24,
+            backgroundColor: COLORS.surface,
+            borderWidth: 1,
+            borderColor: COLORS.border,
+          },
           searchFocused && { borderColor: COLORS.primary },
         ]}
       >
@@ -105,10 +140,14 @@ export default function HomeScreen() {
           style={{ marginRight: SPACING.sm }}
         />
         <TextInput
-          className="flex-1 py-3"
-          style={{ color: COLORS.textPrimary, fontSize: FONT_SIZES.md }}
+          style={{
+            flex: 1,
+            paddingVertical: 12,
+            color: COLORS.textPrimary,
+            fontSize: FONT_SIZES.md,
+          }}
           placeholder="搜索食谱或食材..."
-          placeholderTextColor={COLORS.textSecondary}
+          placeholderTextColor="#A0A4AB"
           value={searchQuery}
           onChangeText={setSearchQuery}
           onFocus={() => setSearchFocused(true)}
@@ -124,10 +163,14 @@ export default function HomeScreen() {
       </View>
 
       {isSearching ? (
-        <View className="mb-6">
+        <View style={{ marginBottom: 24 }}>
           <Text
-            className="font-bold mb-4"
-            style={{ fontSize: FONT_SIZES.xxl, color: COLORS.textPrimary }}
+            style={{
+              fontWeight: 'bold',
+              marginBottom: 16,
+              fontSize: FONT_SIZES.xxl,
+              color: COLORS.textPrimary,
+            }}
           >
             搜索结果
           </Text>
@@ -141,8 +184,8 @@ export default function HomeScreen() {
             searchResults.map((recipe) => <RecipeCard key={recipe.id} recipe={recipe} />)
           ) : (
             <Text
-              className="text-center"
               style={{
+                textAlign: 'center',
                 color: COLORS.textSecondary,
                 fontSize: FONT_SIZES.md,
                 marginVertical: SPACING.xl,
@@ -154,28 +197,87 @@ export default function HomeScreen() {
         </View>
       ) : (
         <>
-          <View className="mt-1 mb-6">
-            <Text
-              className="font-bold"
-              style={{ fontSize: FONT_SIZES.title, color: COLORS.textPrimary }}
+          {/* 今日美食推荐 Banner */}
+          <View
+            style={{
+              position: 'relative',
+              height: 192,
+              borderRadius: 16,
+              overflow: 'hidden',
+              marginBottom: 24,
+              backgroundColor: COLORS.surface,
+            }}
+          >
+            <Image
+              source={{ uri: 'https://picsum.photos/seed/featuredFood/800/600' }}
+              style={{ width: '100%', height: '100%', opacity: 0.6 }}
+              contentFit="cover"
+            />
+            <View
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.4)',
+              }}
+            />
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: 20,
+                backgroundColor: 'transparent',
+              }}
             >
-              甄味
-            </Text>
-            <Text className="mt-1" style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary }}>
-              FlavorGuide
-            </Text>
+              <Text
+                style={{
+                  fontWeight: 'bold',
+                  marginBottom: 4,
+                  fontSize: FONT_SIZES.xxxl,
+                  color: '#ffffff',
+                }}
+              >
+                今日美食推荐
+              </Text>
+              <Text style={{ fontSize: FONT_SIZES.md, color: '#ffffff', opacity: 0.6 }}>
+                探索春季时令鲜美，为生活加点料
+              </Text>
+            </View>
           </View>
 
           {/* 快捷分类入口 - 4列2行 */}
-          <View className="flex-row flex-wrap justify-start mb-6">
+          <View
+            style={{
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-start',
+              marginBottom: 24,
+            }}
+          >
             {categoriesLoading
               ? Array.from({ length: 8 }).map((_, i) => (
-                  <View key={i} className="w-[25%] items-center mb-4">
+                  <View key={i} style={{ width: '25%', alignItems: 'center', marginBottom: 16 }}>
                     <View
-                      className="w-14 h-14 rounded-full mb-1"
-                      style={{ backgroundColor: COLORS.border }}
+                      style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 28,
+                        marginBottom: 4,
+                        backgroundColor: COLORS.border,
+                      }}
                     />
-                    <View className="w-10 h-3 rounded" style={{ backgroundColor: COLORS.border }} />
+                    <View
+                      style={{
+                        width: 40,
+                        height: 12,
+                        borderRadius: 4,
+                        backgroundColor: COLORS.border,
+                      }}
+                    />
                   </View>
                 ))
               : homeCategories.slice(0, 8).map((cat) => (
@@ -190,13 +292,22 @@ export default function HomeScreen() {
                 ))}
           </View>
 
-          <View className="mb-6">
-            <Text
-              className="font-bold mb-4"
-              style={{ fontSize: FONT_SIZES.xxl, color: COLORS.textPrimary }}
+          <View style={{ marginBottom: 24 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 16,
+                gap: SPACING.sm,
+              }}
             >
-              🔥 人气排行榜
-            </Text>
+              <Ionicons name="flame" size={SIZES.iconMedium} color={COLORS.primary} />
+              <Text
+                style={{ fontWeight: 'bold', fontSize: FONT_SIZES.xxl, color: COLORS.textPrimary }}
+              >
+                人气排行榜
+              </Text>
+            </View>
             {searchLoading || topRanked.length === 0 ? (
               <View style={{ gap: SPACING.lg }}>
                 <RecipeCardSkeleton />
@@ -210,12 +321,16 @@ export default function HomeScreen() {
             )}
           </View>
 
-          <View className="mb-6">
+          <View style={{ marginBottom: 24 }}>
             <Text
-              className="font-bold mb-4"
-              style={{ fontSize: FONT_SIZES.xxl, color: COLORS.textPrimary }}
+              style={{
+                fontWeight: 'bold',
+                marginBottom: 16,
+                fontSize: FONT_SIZES.xxl,
+                color: COLORS.textPrimary,
+              }}
             >
-              ✨ 为你推荐
+              猜你喜欢
             </Text>
             {searchLoading || recommended.length === 0 ? (
               <View style={{ gap: SPACING.lg }}>

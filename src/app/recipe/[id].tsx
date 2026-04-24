@@ -1,40 +1,99 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, ActivityIndicator, ScrollView } from 'react-native';
 import { FlashList, ListRenderItem } from '@shopify/flash-list';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRecipeActions, useRecipeDetail, useRecipeComments } from '@/hooks';
 import { useAuth } from '@/hooks';
 import { RecipeHeader } from '@/components/business/RecipeHeader';
 import { IngredientList } from '@/components/business/IngredientList';
 import { StepList } from '@/components/business/StepList';
 import { COLORS, SPACING, FONT_SIZES } from '@/constants';
-import type { IComment } from '@/types';
+import type { IComment, IRecipe } from '@/types';
+
+interface RecipeDetailHeaderProps {
+  recipe: IRecipe;
+  liked: boolean;
+  favorited: boolean;
+  commentCount: number;
+  recipeCommentsLength: number;
+  commentsLoading: boolean;
+  onToggleLike: () => void;
+  onToggleFavorite: () => void;
+}
+
+function RecipeDetailHeader({
+  recipe,
+  liked,
+  favorited,
+  commentCount,
+  recipeCommentsLength,
+  commentsLoading,
+  onToggleLike,
+  onToggleFavorite,
+}: RecipeDetailHeaderProps) {
+  return (
+    <View>
+      <RecipeHeader
+        recipe={recipe}
+        liked={liked}
+        favorited={favorited}
+        commentCount={commentCount}
+        onToggleLike={onToggleLike}
+        onToggleFavorite={onToggleFavorite}
+      />
+      <View style={{ padding: 16 }}>
+        <IngredientList ingredients={recipe.ingredients} />
+        <StepList steps={recipe.steps} />
+        <Text
+          style={{
+            fontWeight: 'bold',
+            marginBottom: 16,
+            fontSize: FONT_SIZES.xxl,
+            color: COLORS.textPrimary,
+          }}
+        >
+          菜单评价 / Reviews ({recipeCommentsLength})
+        </Text>
+        {commentsLoading && recipeCommentsLength === 0 && (
+          <ActivityIndicator
+            size="small"
+            color={COLORS.primary}
+            style={{ marginVertical: SPACING.lg }}
+          />
+        )}
+      </View>
+    </View>
+  );
+}
 
 function RecipeCommentItem({ comment }: { comment: IComment }) {
   return (
     <View
-      className="p-4 rounded-xl mb-4"
       style={{
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 16,
         backgroundColor: COLORS.surface,
         borderWidth: 1,
         borderColor: COLORS.borderLight,
       }}
     >
-      <View className="flex-row items-center mb-3">
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
         {comment.avatar ? (
           <Image
             source={{ uri: comment.avatar }}
-            className="mr-2"
-            style={{ width: 32, height: 32, borderRadius: 16 }}
+            style={{ width: 32, height: 32, borderRadius: 16, marginRight: 8 }}
             contentFit="cover"
             transition={200}
           />
         ) : (
           <View
-            className="justify-center items-center mr-2"
             style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginRight: 8,
               width: 32,
               height: 32,
               borderRadius: 16,
@@ -44,16 +103,13 @@ function RecipeCommentItem({ comment }: { comment: IComment }) {
             <Ionicons name="person-outline" size={16} color={COLORS.textSecondary} />
           </View>
         )}
-        <Text
-          className="font-semibold"
-          style={{ fontSize: FONT_SIZES.md, color: COLORS.textPrimary }}
-        >
+        <Text style={{ fontWeight: '600', fontSize: FONT_SIZES.md, color: COLORS.textPrimary }}>
           {comment.username || '匿名用户'}
         </Text>
       </View>
       <Text
-        className="mb-2"
         style={{
+          marginBottom: 8,
           fontSize: FONT_SIZES.md,
           color: COLORS.textPrimary,
           lineHeight: SPACING.xxl,
@@ -62,13 +118,19 @@ function RecipeCommentItem({ comment }: { comment: IComment }) {
         {comment.text}
       </Text>
       {comment.images.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 8 }}>
           {comment.images.map((img) => (
             <Image
               key={img}
               source={{ uri: img }}
-              className="w-20 h-20 rounded mr-2"
-              style={{ borderWidth: 1, borderColor: COLORS.border }}
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 4,
+                marginRight: 8,
+                borderWidth: 1,
+                borderColor: COLORS.border,
+              }}
               contentFit="cover"
               transition={200}
             />
@@ -81,16 +143,20 @@ function RecipeCommentItem({ comment }: { comment: IComment }) {
 }
 
 const CommentListItem: ListRenderItem<IComment> = ({ item }) => (
-  <View className="px-4">
+  <View style={{ paddingHorizontal: 16 }}>
     <RecipeCommentItem comment={item} />
   </View>
 );
 
 const EmptyCommentsList = () => (
-  <View className="px-4">
+  <View style={{ paddingHorizontal: 16 }}>
     <Text
-      className="text-center py-4"
-      style={{ fontSize: FONT_SIZES.md, color: COLORS.textSecondary }}
+      style={{
+        textAlign: 'center',
+        paddingVertical: 16,
+        fontSize: FONT_SIZES.md,
+        color: COLORS.textSecondary,
+      }}
     >
       暂无评论，快来发表第一条评论吧
     </Text>
@@ -114,57 +180,19 @@ export default function RecipeDetailScreen() {
     [checkAuth],
   );
 
-  const listHeader = useMemo(() => {
-    if (!recipe) return null;
-    const liked = isLiked(recipe.id);
-    const favorited = isFavorited(recipe.id);
-    const commentCount = getCommentCount(recipe.id);
-    return (
-      <View>
-        <RecipeHeader
-          recipe={recipe}
-          liked={liked}
-          favorited={favorited}
-          commentCount={commentCount}
-          onToggleLike={() => handleActionClick(() => handleToggleLike(recipe.id))}
-          onToggleFavorite={() => handleActionClick(() => handleToggleFavorite(recipe.id))}
-        />
-        <View className="p-4">
-          <IngredientList ingredients={recipe.ingredients} />
-          <StepList steps={recipe.steps} />
-          <Text
-            className="font-bold mb-4"
-            style={{ fontSize: FONT_SIZES.xxl, color: COLORS.textPrimary }}
-          >
-            评论 ({recipeComments.length})
-          </Text>
-          {commentsLoading && recipeComments.length === 0 && (
-            <ActivityIndicator
-              size="small"
-              color={COLORS.primary}
-              style={{ marginVertical: SPACING.lg }}
-            />
-          )}
-        </View>
-      </View>
-    );
-  }, [
-    recipe,
-    isLiked,
-    isFavorited,
-    getCommentCount,
-    recipeComments.length,
-    commentsLoading,
-    handleActionClick,
-    handleToggleLike,
-    handleToggleFavorite,
-  ]);
+  const liked = recipe ? isLiked(recipe.id) : false;
+  const favorited = recipe ? isFavorited(recipe.id) : false;
+  const commentCount = recipe ? getCommentCount(recipe.id) : 0;
 
   if (loading) {
     return (
       <View
-        className="flex-1 justify-center items-center"
-        style={{ backgroundColor: COLORS.background }}
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: COLORS.background,
+        }}
       >
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
@@ -179,9 +207,23 @@ export default function RecipeDetailScreen() {
       renderItem={CommentListItem}
       keyExtractor={(item) => item.id}
       estimatedItemSize={160}
-      ListHeaderComponent={listHeader}
+      ListHeaderComponent={
+        recipe ? (
+          <RecipeDetailHeader
+            recipe={recipe}
+            liked={liked}
+            favorited={favorited}
+            commentCount={commentCount}
+            recipeCommentsLength={recipeComments.length}
+            commentsLoading={commentsLoading}
+            onToggleLike={() => handleActionClick(() => handleToggleLike(recipe.id))}
+            onToggleFavorite={() => handleActionClick(() => handleToggleFavorite(recipe.id))}
+          />
+        ) : null
+      }
       ListEmptyComponent={!commentsLoading ? EmptyCommentsList : null}
       contentContainerStyle={{ paddingBottom: 24 }}
+      style={{ backgroundColor: COLORS.background }}
     />
   );
 }

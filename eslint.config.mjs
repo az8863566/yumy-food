@@ -3,6 +3,7 @@ import eslintJs from '@eslint/js';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import eslintPluginReactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default defineConfig([
@@ -21,7 +22,14 @@ export default defineConfig([
       parser: tseslint.parser,
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['jest.config.js', 'metro.config.js'],
+          allowDefaultProject: [
+            'jest.config.js',
+            'metro.config.js',
+            'babel.config.js',
+            'tailwind.config.js',
+            'eslint.config.mjs',
+            'jest.setup.js',
+          ],
         },
         tsconfigRootDir: import.meta.dirname,
       },
@@ -30,11 +38,18 @@ export default defineConfig([
         ...globals.node,
       },
     },
+    plugins: {
+      'react-hooks': eslintPluginReactHooks,
+    },
     rules: {
       // TypeScript 相关
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+
+      // React Hooks 规则
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
 
       // 通用规则
       'no-console': ['warn', { allow: ['warn', 'error'] }],
@@ -61,6 +76,11 @@ export default defineConfig([
   // 测试文件特殊规则
   {
     files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
+    },
     rules: {
       'no-console': 'off',
       '@typescript-eslint/no-explicit-any': 'off',

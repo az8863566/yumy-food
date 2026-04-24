@@ -1,12 +1,72 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigationContext } from '@/store/NavigationContext';
 import { useCategories, useCategoryRecipes } from '@/hooks';
 import { CategorySidebar } from '@/components/business/CategorySidebar';
 import { SubCategoryDetail } from '@/components/business/SubCategoryDetail';
 import { COLORS, SPACING, SIZES, FONT_SIZES } from '@/constants';
+import type { ISubCategory } from '@/types';
+
+function MinorCategoryCard({ minor, onPress }: { minor: ISubCategory; onPress: () => void }) {
+  const [pressed, setPressed] = React.useState(false);
+
+  return (
+    <TouchableOpacity
+      style={[
+        {
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 12,
+          width: '47%',
+          height: 112,
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.05)',
+          backgroundColor: COLORS.surface,
+        },
+        pressed && { borderColor: 'rgba(200,169,110,0.5)' },
+      ]}
+      onPress={onPress}
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      activeOpacity={0.9}
+    >
+      <Image
+        source={{ uri: minor.image || 'https://picsum.photos/200' }}
+        style={{ width: '100%', height: '100%', opacity: pressed ? 0.9 : 0.6 }}
+        contentFit="cover"
+        transition={200}
+      />
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: pressed ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.3)',
+        }}
+      >
+        <Text
+          style={{
+            color: '#ffffff',
+            fontSize: FONT_SIZES.md,
+            fontWeight: 'bold',
+            letterSpacing: 1,
+            textShadowColor: 'rgba(0,0,0,0.5)',
+            textShadowOffset: { width: 0, height: 1 },
+            textShadowRadius: 2,
+          }}
+        >
+          {minor.name}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
 
 export default function CategoryScreen() {
   const { activeMinorCategoryId, setActiveMinorCategoryId } = useNavigationContext();
@@ -34,8 +94,12 @@ export default function CategoryScreen() {
   if (categoriesLoading) {
     return (
       <View
-        className="flex-1 justify-center items-center"
-        style={{ backgroundColor: COLORS.background }}
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: COLORS.background,
+        }}
       >
         <ActivityIndicator size="large" color={COLORS.primary} />
       </View>
@@ -45,19 +109,30 @@ export default function CategoryScreen() {
   if (categoriesError) {
     return (
       <View
-        className="flex-1 justify-center items-center"
-        style={{ backgroundColor: COLORS.background }}
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: COLORS.background,
+        }}
       >
         <Ionicons name="warning-outline" size={SIZES.iconLarge} color={COLORS.textSecondary} />
         <Text
-          className="text-center"
-          style={{ color: COLORS.textSecondary, fontSize: FONT_SIZES.md }}
+          style={{
+            textAlign: 'center',
+            color: COLORS.textSecondary,
+            fontSize: FONT_SIZES.md,
+          }}
         >
           分类加载失败
         </Text>
         <Text
-          className="text-center mt-1"
-          style={{ color: COLORS.textSecondary, fontSize: FONT_SIZES.sm }}
+          style={{
+            textAlign: 'center',
+            marginTop: 4,
+            color: COLORS.textSecondary,
+            fontSize: FONT_SIZES.sm,
+          }}
         >
           {categoriesError.message}
         </Text>
@@ -85,7 +160,7 @@ export default function CategoryScreen() {
   const activeMinors = subCategories.filter((sub) => sub.parentId === selectedParent);
 
   return (
-    <View className="flex-1 flex-row" style={{ backgroundColor: COLORS.background }}>
+    <View style={{ flex: 1, flexDirection: 'row', backgroundColor: COLORS.background }}>
       <CategorySidebar
         parentCategories={parentCategories}
         selectedParent={selectedParent}
@@ -94,53 +169,34 @@ export default function CategoryScreen() {
 
       {/* 右侧子分类内容区 */}
       <ScrollView
-        className="flex-1"
+        style={{ flex: 1 }}
         contentContainerStyle={{ padding: SPACING.lg, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       >
         <Text
-          className="font-bold mb-4 pb-3"
           style={{
+            fontWeight: 'bold',
+            marginBottom: 20,
+            paddingBottom: 12,
             fontSize: FONT_SIZES.xxl,
             color: COLORS.textPrimary,
             borderBottomWidth: 1,
-            borderBottomColor: COLORS.borderLight,
+            borderBottomColor: 'rgba(255,255,255,0.05)',
           }}
         >
           {parentCategories.find((c) => c.id === selectedParent)?.name}
         </Text>
-        <View className="flex-row flex-wrap" style={{ gap: SPACING.md }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: SPACING.md }}>
           {activeMinors.map((minor) => (
-            <TouchableOpacity
+            <MinorCategoryCard
               key={minor.id}
-              className="relative overflow-hidden rounded-xl"
-              style={{
-                width: '47%',
-                height: 112,
-                borderWidth: 1,
-                borderColor: COLORS.borderLight,
-              }}
+              minor={minor}
               onPress={() => setActiveMinorCategoryId(minor.id)}
-            >
-              <Image
-                source={{ uri: minor.image }}
-                className="w-full h-full"
-                contentFit="cover"
-                transition={200}
-              />
-              <View
-                className="absolute inset-0 justify-center items-center"
-                style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
-              >
-                <Text className="font-bold" style={{ color: '#ffffff', fontSize: FONT_SIZES.md }}>
-                  {minor.name}
-                </Text>
-              </View>
-            </TouchableOpacity>
+            />
           ))}
         </View>
         {activeMinors.length === 0 && (
-          <View className="items-center justify-center py-16">
+          <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 64 }}>
             <Text style={{ color: COLORS.textSecondary, fontSize: FONT_SIZES.md }}>
               该分类下暂无子选项
             </Text>
